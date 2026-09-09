@@ -1,11 +1,10 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-  LayoutDashboard, Shield, AlertTriangle, Flame, Clock, FileX, Wrench,
-  ClipboardList, CheckCircle, Server, AppWindow, Upload, BarChart3,
+  LayoutDashboard, Shield, AlertTriangle, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
   ScrollText, Settings, Search, Bell, HelpCircle, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
@@ -30,18 +29,10 @@ const NAV: NavGroup[] = [
     items: [
       { href: "/vulnerabilities", label: "All Vulnerabilities", icon: <Shield size={16} /> },
       { href: "/vulnerabilities?status=New", label: "New / Untriaged", icon: <AlertTriangle size={16} />, badge: "untriaged" },
-      { href: "/vulnerabilities?severity=Critical-High", label: "Critical & High", icon: <Flame size={16} /> },
-      { href: "/vulnerabilities?sla=Breached", label: "SLA Breaches", icon: <Clock size={16} />, badge: "sla" },
       { href: "/exceptions", label: "Exceptions", icon: <FileX size={16} /> },
     ],
   },
-  {
-    label: "Remediation",
-    items: [
-      { href: "/remediation", label: "Remediation Queue", icon: <ClipboardList size={16} /> },
-      { href: "/remediation?status=Validation", label: "Validation", icon: <CheckCircle size={16} /> },
-    ],
-  },
+  { label: "Remediation", items: [{ href: "/remediation", label: "Remediation Queue", icon: <ClipboardList size={16} /> }] },
   {
     label: "Inventory",
     items: [
@@ -60,22 +51,102 @@ const NAV: NavGroup[] = [
   { label: "System", items: [{ href: "/administration", label: "Administration", icon: <Settings size={16} /> }] },
 ];
 
-export default function Shell({ children }: { children: ReactNode }) {
+const FLAT_ITEMS = NAV.flatMap((g) => g.items);
+
+/** The only bit of the shell that needs the current URL (query included) — kept in its own
+ *  narrow Suspense boundary so useSearchParams() never forces the whole page (including
+ *  {children}) to bail out to client-side-only rendering. */
+function NavLinks({ slaBreachCount, untriagedCount }: { slaBreachCount: number; untriagedCount: number }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
+
+  return (
+    <>
+      {NAV.map((group, gi) => (
+        <div key={gi} className={gi > 0 ? "mt-1" : ""}>
+          {group.label && <div className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">{group.label}</div>}
+          {group.items.map((item) => {
+            const [itemPath, itemQuery] = item.href.split("?");
+            // A bare-path item (e.g. "All Vulnerabilities") is only active with no filters applied;
+            // otherwise it stayed highlighted alongside whichever filtered child link was active.
+            const active = itemQuery ? item.href === currentUrl : pathname === itemPath && !searchParams.toString();
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="w-full flex items-center gap-2.5 px-4 py-2 mx-1 text-left transition-all duration-100 rounded-md"
+                style={{ width: "calc(100% - 8px)", background: active ? "#1E3A5F" : "transparent", color: active ? "#60A5FA" : "#94A3B8" }}
+              >
+                <span style={{ color: active ? "#60A5FA" : "#64748B" }}>{item.icon}</span>
+                <span className="text-[13px] font-medium">{item.label}</span>
+                {item.badge === "sla" && slaBreachCount > 0 && (
+                  <span className="ml-auto text-[10px] font-semibold rounded-full px-1.5 py-0.5" style={{ background: "#7F1D1D", color: "#FCA5A5" }}>
+                    {slaBreachCount}
+                  </span>
+                )}
+                {item.badge === "untriaged" && untriagedCount > 0 && (
+                  <span className="ml-auto text-[10px] font-semibold rounded-full px-1.5 py-0.5" style={{ background: "#1E3A5F", color: "#60A5FA" }}>
+                    {untriagedCount}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function NavLinksFallback() {
+  return (
+    <>
+      {NAV.map((group, gi) => (
+        <div key={gi} className={gi > 0 ? "mt-1" : ""}>
+          {group.label && <div className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">{group.label}</div>}
+          {group.items.map((item) => (
+            <div key={item.href} className="w-full flex items-center gap-2.5 px-4 py-2 mx-1 text-left" style={{ width: "calc(100% - 8px)", color: "#94A3B8" }}>
+              <span style={{ color: "#64748B" }}>{item.icon}</span>
+              <span className="text-[13px] font-medium">{item.label}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** Breadcrumb only needs the pathname (no Suspense required) — matches by path, ignoring
+ *  any active filter query string, since the breadcrumb label doesn't need to disambiguate. */
+function Breadcrumb() {
+  const pathname = usePathname();
+  const activeItem = FLAT_ITEMS.find((i) => i.href.split("?")[0] === pathname);
+  const activeLabel = activeItem?.label ?? "Dashboard";
+  const activeGroup = NAV.find((g) => g.items.includes(activeItem as NavItem))?.label;
+
+  return (
+    <div className="flex items-center gap-1.5 text-sm min-w-0">
+      <span className="text-slate-400 font-medium">VulnOps</span>
+      {activeGroup && (
+        <>
+          <ChevronRight size={14} className="text-slate-300 shrink-0" />
+          <span className="text-slate-400 font-medium">{activeGroup}</span>
+        </>
+      )}
+      <ChevronRight size={14} className="text-slate-300 shrink-0" />
+      <span className="text-slate-800 font-semibold truncate">{activeLabel}</span>
+    </div>
+  );
+}
+
+export default function Shell({ children }: { children: ReactNode }) {
   const [notifications] = useState(7);
   const [searchFocused, setSearchFocused] = useState(false);
   const { vulnerabilities } = useData();
 
-  const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
-
   const slaBreachCount = vulnerabilities.filter((v) => isOpen(v) && calculateSlaStatus(v.severity, v.firstSeen, v.status).state === "Breached").length;
   const untriagedCount = vulnerabilities.filter((v) => v.status === "New").length;
-
-  const flatItems = NAV.flatMap((g) => g.items);
-  const activeItem = flatItems.find((i) => i.href === currentUrl) ?? flatItems.find((i) => i.href.split("?")[0] === pathname);
-  const activeLabel = activeItem?.label ?? "Dashboard";
-  const activeGroup = NAV.find((g) => g.items.includes(activeItem as NavItem))?.label;
 
   return (
     <div className="flex h-full overflow-hidden" style={{ background: "var(--background)" }}>
@@ -91,36 +162,9 @@ export default function Shell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-3 scrollbar-hide">
-          {NAV.map((group, gi) => (
-            <div key={gi} className={gi > 0 ? "mt-1" : ""}>
-              {group.label && <div className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">{group.label}</div>}
-              {group.items.map((item) => {
-                const [itemPath, itemQuery] = item.href.split("?");
-                const active = itemQuery ? item.href === currentUrl : pathname === itemPath;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 mx-1 text-left transition-all duration-100 rounded-md"
-                    style={{ width: "calc(100% - 8px)", background: active ? "#1E3A5F" : "transparent", color: active ? "#60A5FA" : "#94A3B8" }}
-                  >
-                    <span style={{ color: active ? "#60A5FA" : "#64748B" }}>{item.icon}</span>
-                    <span className="text-[13px] font-medium">{item.label}</span>
-                    {item.badge === "sla" && slaBreachCount > 0 && (
-                      <span className="ml-auto text-[10px] font-semibold rounded-full px-1.5 py-0.5" style={{ background: "#7F1D1D", color: "#FCA5A5" }}>
-                        {slaBreachCount}
-                      </span>
-                    )}
-                    {item.badge === "untriaged" && untriagedCount > 0 && (
-                      <span className="ml-auto text-[10px] font-semibold rounded-full px-1.5 py-0.5" style={{ background: "#1E3A5F", color: "#60A5FA" }}>
-                        {untriagedCount}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+          <Suspense fallback={<NavLinksFallback />}>
+            <NavLinks slaBreachCount={slaBreachCount} untriagedCount={untriagedCount} />
+          </Suspense>
         </nav>
 
         <div className="px-4 py-4 border-t border-white/[0.06]">
@@ -140,17 +184,7 @@ export default function Shell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <header className="flex items-center px-6 shrink-0 gap-4" style={{ height: 64, background: "#FFFFFF", borderBottom: "1px solid var(--border)" }}>
-          <div className="flex items-center gap-1.5 text-sm min-w-0">
-            <span className="text-slate-400 font-medium">VulnOps</span>
-            {activeGroup && (
-              <>
-                <ChevronRight size={14} className="text-slate-300 shrink-0" />
-                <span className="text-slate-400 font-medium">{activeGroup}</span>
-              </>
-            )}
-            <ChevronRight size={14} className="text-slate-300 shrink-0" />
-            <span className="text-slate-800 font-semibold truncate">{activeLabel}</span>
-          </div>
+          <Breadcrumb />
 
           <div className="flex-1" />
 

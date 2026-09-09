@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { LayoutGrid, List, Plus, User, Building2, AlertCircle, Clock } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import type { RemediationStatus } from "@/types/remediation";
@@ -79,7 +79,6 @@ function KanbanCard({ card, onOpen }: { card: BoardCard; onOpen: () => void }) {
 
 export default function RemediationBoard() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { remediations, vulnerabilities } = useData();
   const [filterSev, setFilterSev] = useState<string>("all");
   const [view, setView] = useState<"board" | "list">("board");
@@ -99,8 +98,7 @@ export default function RemediationBoard() {
     [remediations, vulnById]
   );
 
-  const statusParam = searchParams.get("status");
-  const filtered = cards.filter((c) => (filterSev === "all" || c.vuln.severity === filterSev) && (!statusParam || c.status === statusParam));
+  const filtered = cards.filter((c) => filterSev === "all" || c.vuln.severity === filterSev);
 
   return (
     <div className="p-6 space-y-4 max-w-[1360px] mx-auto">
