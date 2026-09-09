@@ -61,7 +61,7 @@ export default function LoginForm() {
                   name="username"
                   autoComplete="username"
                   className="bg-transparent text-sm outline-none text-slate-700 placeholder-slate-400 flex-1 min-w-0"
-                  placeholder="hawkadmin"
+                  placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   autoFocus
@@ -81,7 +81,7 @@ export default function LoginForm() {
                   type="password"
                   autoComplete="current-password"
                   className="bg-transparent text-sm outline-none text-slate-700 placeholder-slate-400 flex-1 min-w-0"
-                  placeholder="••••••••"
+                  placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -103,13 +103,6 @@ export default function LoginForm() {
               Sign In <ArrowRight size={15} />
             </button>
           </form>
-        </div>
-
-        <div className="mt-4 rounded-lg px-3.5 py-2.5 text-center" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
-          <p className="text-[11px] text-slate-500">
-            Demo credentials: <span className="font-mono font-semibold text-slate-700">hawkadmin</span> /{" "}
-            <span className="font-mono font-semibold text-slate-700">hawkadmin</span>
-          </p>
         </div>
       </div>
     </div>

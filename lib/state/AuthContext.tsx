@@ -1,11 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState } from "react";
+import { useData } from "@/lib/state/DataContext";
 
-// Demo-only credential check -- no backend, no hashing, no session persistence.
-// Matches the rest of the app's session-scoped state: a refresh resets it.
-const DEMO_USERNAME = "hawkadmin";
-const DEMO_PASSWORD = "hawkadmin";
+// Demo-only credential check -- no backend, no hashing, no per-user passwords,
+// no session persistence. Every account in userAccounts (seeded from
+// data/users.csv, plus anything added via Administration > User Management)
+// shares this same default password. Matches the rest of the app's
+// session-scoped state: a refresh resets the logged-in state.
+export const DEFAULT_PASSWORD = "hawkadmin";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -17,17 +20,22 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { userAccounts } = useData();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
 
-  const login = useCallback((username: string, password: string): boolean => {
-    if (username === DEMO_USERNAME && password === DEMO_PASSWORD) {
+  const login = useCallback(
+    (username: string, password: string): boolean => {
+      const trimmed = username.trim();
+      if (password !== DEFAULT_PASSWORD) return false;
+      const match = userAccounts.find((u) => u.username.toLowerCase() === trimmed.toLowerCase());
+      if (!match) return false;
       setIsAuthenticated(true);
-      setCurrentUsername(username);
+      setCurrentUsername(match.username);
       return true;
-    }
-    return false;
-  }, []);
+    },
+    [userAccounts]
+  );
 
   const logout = useCallback(() => {
     setIsAuthenticated(false);

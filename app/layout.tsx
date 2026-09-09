@@ -29,11 +29,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${inter.variable} ${dmSans.variable} ${jetbrainsMono.variable} font-sans`} style={{ height: "100%" }}>
         <ToastProvider>
-          <AuthProvider>
-            <DataProvider initial={data}>
+          <DataProvider initial={data}>
+            <AuthProvider>
               <AppFrame>{children}</AppFrame>
-            </DataProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </DataProvider>
         </ToastProvider>
       </body>
     </html>

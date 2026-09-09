@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Search, Plus, Edit3, Trash2, UserRound } from "lucide-react";
+import { ArrowLeft, Search, Plus, Edit3, Trash2, UserRound, Info } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
+import { DEFAULT_PASSWORD } from "@/lib/state/AuthContext";
 import type { UserAccount } from "@/types/user-account";
 import Modal from "@/components/common/Modal";
 import { initials, ownerColor } from "@/lib/business/format";
@@ -105,6 +106,13 @@ export default function UserManagement() {
         >
           <Plus size={14} /> Add User
         </button>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-lg px-3.5 py-2.5" style={{ background: "#EFF6FF", border: "1px solid #BFDBFE" }}>
+        <Info size={14} className="text-blue-500 shrink-0" />
+        <p className="text-xs text-blue-700">
+          New users sign in with password <span className="font-mono font-semibold">{DEFAULT_PASSWORD}</span> — this demo doesn't support per-user or custom passwords.
+        </p>
       </div>
 
       <div className="flex items-center gap-3">
