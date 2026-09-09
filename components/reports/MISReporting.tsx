@@ -77,7 +77,7 @@ export default function MISReporting() {
 
   const exportExcel = () => {
     downloadCsv(
-      "vulnops-mis-report.csv",
+      "hawkeye-mis-report.csv",
       [["CVE", "Title", "Severity", "CVSS", "Status", "Asset", "Environment", "Risk Score"], ...vulnerabilities.map((v) => [v.cve, v.title, v.severity, String(v.cvss), v.status, v.assetId, v.environment, String(v.riskScore)])]
     );
   };
@@ -224,7 +224,7 @@ export default function MISReporting() {
       </div>
 
       <div className="flex items-center justify-between text-[10px] text-slate-400 border-t pt-4" style={{ borderColor: "#E2E8F0" }}>
-        <span>VulnOps Enterprise Vulnerability Management · Confidential</span>
+        <span>HawkEye Enterprise Vulnerability Management · Confidential</span>
       </div>
       <div className="h-4" />
     </div>

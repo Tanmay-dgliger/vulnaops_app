@@ -12,7 +12,7 @@ const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"], weight:
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], weight: ["400", "500"] });
 
 export const metadata: Metadata = {
-  title: "VulnOps | Enterprise Vulnerability Management",
+  title: "HawkEye | Enterprise Vulnerability Management",
   description: "Centralized vulnerability management: scanner intake, triage, remediation, and MIS reporting.",
 };
 

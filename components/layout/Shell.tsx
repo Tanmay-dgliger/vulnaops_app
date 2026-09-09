@@ -11,6 +11,7 @@ import { useData } from "@/lib/state/DataContext";
 import { useAuth } from "@/lib/state/AuthContext";
 import { calculateSlaStatus } from "@/lib/business/sla";
 import { isOpen } from "@/lib/business/metrics";
+import HawkEyeLogo from "@/components/common/HawkEyeLogo";
 
 interface NavItem {
   href: string;
@@ -134,7 +135,7 @@ function Breadcrumb() {
 
   return (
     <div className="flex items-center gap-1.5 text-sm min-w-0">
-      <span className="text-slate-400 font-medium">VulnOps</span>
+      <span className="text-slate-400 font-medium">HawkEye</span>
       {activeGroup && (
         <>
           <ChevronRight size={14} className="text-slate-300 shrink-0" />
@@ -166,11 +167,11 @@ export default function Shell({ children }: { children: ReactNode }) {
     <div className="flex h-full overflow-hidden" style={{ background: "var(--background)" }}>
       <aside className="flex flex-col shrink-0 overflow-hidden" style={{ width: 240, background: "#0F172A", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-white/[0.06]">
-          <div className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: "#2563EB" }}>
-            <Shield size={14} className="text-white" strokeWidth={2.5} />
+          <div className="flex items-center justify-center rounded-md shrink-0" style={{ width: 28, height: 28, background: "#FFFFFF" }}>
+            <HawkEyeLogo size={22} />
           </div>
           <div>
-            <div className="text-white font-bold text-sm tracking-tight leading-none font-heading">VULNOPS</div>
+            <div className="text-white font-bold text-sm tracking-tight leading-none font-heading">HAWKEYE</div>
             <div className="text-slate-500 text-[10px] leading-none mt-1 font-medium tracking-wide uppercase">Vulnerability Management</div>
           </div>
         </div>

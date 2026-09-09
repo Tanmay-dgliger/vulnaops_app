@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Users, Settings2, Plug, ChevronRight } from "lucide-react";
 
 const SECTIONS = [
-  { href: "/administration/users", icon: Users, title: "User Management", desc: "Manage the accounts that can sign in to VulnOps.", enabled: true },
+  { href: "/administration/users", icon: Users, title: "User Management", desc: "Manage the accounts that can sign in to HawkEye.", enabled: true },
   { href: "#", icon: Settings2, title: "SLA Policy Configuration", desc: "Tune remediation SLA thresholds by severity.", enabled: false },
   { href: "#", icon: Plug, title: "Integrations", desc: "Scanner, ticketing, and notification connectors.", enabled: false },
 ];

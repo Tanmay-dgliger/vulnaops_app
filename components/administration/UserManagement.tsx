@@ -96,7 +96,7 @@ export default function UserManagement() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 font-heading">User Management</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Manage the demo accounts that can sign in to VulnOps</p>
+          <p className="text-sm text-slate-500 mt-0.5">Manage the demo accounts that can sign in to HawkEye</p>
         </div>
         <button
           onClick={openAdd}

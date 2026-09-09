@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Lock, User, ArrowRight } from "lucide-react";
+import { Lock, User, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/state/AuthContext";
 import { useToast } from "@/components/common/Toast";
+import HawkEyeLogo from "@/components/common/HawkEyeLogo";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -35,11 +36,11 @@ export default function LoginForm() {
     <div className="flex items-center justify-center min-h-screen p-6" style={{ background: "var(--background)" }}>
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="flex items-center justify-center rounded-md" style={{ width: 32, height: 32, background: "#2563EB" }}>
-            <Shield size={16} className="text-white" strokeWidth={2.5} />
+          <div className="flex items-center justify-center rounded-md" style={{ width: 36, height: 36, background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+            <HawkEyeLogo size={26} />
           </div>
           <div>
-            <div className="text-slate-900 font-bold text-base tracking-tight leading-none font-heading">VULNOPS</div>
+            <div className="text-slate-900 font-bold text-base tracking-tight leading-none font-heading">HAWKEYE</div>
             <div className="text-slate-400 text-[10px] leading-none mt-1 font-medium tracking-wide uppercase">Vulnerability Management</div>
           </div>
         </div>
