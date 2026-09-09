@@ -1,4 +1,5 @@
-import { parseJsonArray, readCsv, toNum, toOptional } from "./parse";
+import raw from "@/data/csv/remediations.csv";
+import { parseCsv, parseJsonArray, toNum, toOptional } from "./parse";
 import type {
   ChecklistItem,
   Evidence,
@@ -9,7 +10,7 @@ import type {
 } from "@/types/remediation";
 
 export function getRemediations(): Remediation[] {
-  const rows = readCsv<Record<string, string>>("remediations.csv");
+  const rows = parseCsv<Record<string, string>>(raw);
   return rows.map((r) => ({
     id: r.id,
     vulnerabilityId: r.vulnerabilityId,

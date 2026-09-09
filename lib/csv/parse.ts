@@ -1,12 +1,15 @@
-import fs from "fs";
-import path from "path";
 import Papa from "papaparse";
 
-const CSV_DIR = path.join(process.cwd(), "data", "csv");
-
-export function readCsv<T = Record<string, string>>(filename: string): T[] {
-  const filePath = path.join(CSV_DIR, filename);
-  const raw = fs.readFileSync(filePath, "utf8");
+/**
+ * Parses raw CSV text. Each lib/csv/*.ts loader imports its file directly
+ * (e.g. `import raw from "@/data/csv/vulnerabilities.csv"`), compiled into
+ * the JS bundle via the webpack asset/source rule in next.config.ts, rather
+ * than reading it from disk with fs at runtime. A prior fs.readFileSync-based
+ * approach worked locally but produced a serverless bundle on Vercel missing
+ * the data/ directory (untraceable dynamic file path), causing a runtime
+ * ENOENT that only showed up once deployed.
+ */
+export function parseCsv<T = Record<string, string>>(raw: string): T[] {
   const result = Papa.parse<T>(raw, {
     header: true,
     skipEmptyLines: true,

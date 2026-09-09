@@ -1,8 +1,9 @@
-import { readCsv } from "./parse";
+import raw from "@/data/csv/users.csv";
+import { parseCsv } from "./parse";
 import type { User } from "@/types/user";
 
 export function getUsers(): User[] {
-  const rows = readCsv<Record<string, string>>("users.csv");
+  const rows = parseCsv<Record<string, string>>(raw);
   return rows.map((r) => ({
     id: r.id,
     name: r.name,

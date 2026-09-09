@@ -1,8 +1,9 @@
-import { readCsv, toOptional } from "./parse";
+import raw from "@/data/csv/activities.csv";
+import { parseCsv, toOptional } from "./parse";
 import type { ActionType, Activity, EntityType } from "@/types/activity";
 
 export function getActivities(): Activity[] {
-  const rows = readCsv<Record<string, string>>("activities.csv");
+  const rows = parseCsv<Record<string, string>>(raw);
   return rows.map((r) => ({
     id: r.id,
     timestamp: r.timestamp,

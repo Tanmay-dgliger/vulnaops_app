@@ -1,8 +1,9 @@
-import { parsePipeList, readCsv, toOptional } from "./parse";
+import raw from "@/data/csv/exceptions.csv";
+import { parseCsv, parsePipeList, toOptional } from "./parse";
 import type { Exception, ExceptionStatus, ExceptionType } from "@/types/exception";
 
 export function getExceptions(): Exception[] {
-  const rows = readCsv<Record<string, string>>("exceptions.csv");
+  const rows = parseCsv<Record<string, string>>(raw);
   return rows.map((r) => ({
     id: r.id,
     vulnerabilityId: r.vulnerabilityId,

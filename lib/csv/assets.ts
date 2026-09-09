@@ -1,9 +1,10 @@
-import { readCsv } from "./parse";
+import raw from "@/data/csv/assets.csv";
+import { parseCsv } from "./parse";
 import type { Asset, AssetType, SlaStatus } from "@/types/asset";
 import type { BusinessCriticality, Environment } from "@/types/vulnerability";
 
 export function getAssets(): Asset[] {
-  const rows = readCsv<Record<string, string>>("assets.csv");
+  const rows = parseCsv<Record<string, string>>(raw);
   return rows.map((r) => ({
     id: r.id,
     name: r.name,

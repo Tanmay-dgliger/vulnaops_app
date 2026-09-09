@@ -1,8 +1,9 @@
-import { readCsv, toNum } from "./parse";
+import raw from "@/data/csv/scanner-imports.csv";
+import { parseCsv, toNum } from "./parse";
 import type { ImportStatus, ScannerImport } from "@/types/scanner-import";
 
 export function getScannerImports(): ScannerImport[] {
-  const rows = readCsv<Record<string, string>>("scanner-imports.csv");
+  const rows = parseCsv<Record<string, string>>(raw);
   return rows.map((r) => ({
     id: r.id,
     scanner: r.scanner,

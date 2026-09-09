@@ -1,4 +1,5 @@
-import { readCsv, toBool, toNum, toOptional } from "./parse";
+import raw from "@/data/csv/vulnerabilities.csv";
+import { parseCsv, toBool, toNum, toOptional } from "./parse";
 import type {
   BusinessCriticality,
   DataSensitivity,
@@ -9,7 +10,7 @@ import type {
 } from "@/types/vulnerability";
 
 export function getVulnerabilities(): Vulnerability[] {
-  const rows = readCsv<Record<string, string>>("vulnerabilities.csv");
+  const rows = parseCsv<Record<string, string>>(raw);
   return rows.map((r) => ({
     id: r.id,
     cve: r.cve,
