@@ -4,7 +4,7 @@ import { ReactNode, Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  LayoutDashboard, Shield, AlertTriangle, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
+  LayoutDashboard, Shield, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
   ScrollText, Settings, Search, Bell, HelpCircle, ChevronRight, LogOut,
 } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
@@ -17,7 +17,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: ReactNode;
-  badge?: "sla" | "untriaged";
+  badge?: "sla";
 }
 interface NavGroup {
   label?: string;
@@ -30,7 +30,6 @@ const NAV: NavGroup[] = [
     label: "Vulnerabilities",
     items: [
       { href: "/vulnerabilities", label: "All Vulnerabilities", icon: <Shield size={16} /> },
-      { href: "/vulnerabilities?status=New", label: "New / Untriaged", icon: <AlertTriangle size={16} />, badge: "untriaged" },
       { href: "/exceptions", label: "Exceptions", icon: <FileX size={16} /> },
     ],
   },
@@ -55,13 +54,24 @@ const NAV: NavGroup[] = [
 
 const FLAT_ITEMS = NAV.flatMap((g) => g.items);
 
+/** The single "best" nav item for a given URL: an exact match (covers items with a
+ *  filter query, e.g. "/vulnerabilities?status=New") takes priority; otherwise the
+ *  nearest bare-path item covering this route (covers detail pages and filtered URLs
+ *  that don't have their own dedicated nav entry, e.g. the Dashboard's KPI card links). */
+function findActiveItem(pathname: string, currentUrl: string): NavItem | undefined {
+  const exact = FLAT_ITEMS.find((i) => i.href === currentUrl);
+  if (exact) return exact;
+  return FLAT_ITEMS.find((i) => !i.href.includes("?") && (pathname === i.href || pathname.startsWith(`${i.href}/`)));
+}
+
 /** The only bit of the shell that needs the current URL (query included) — kept in its own
  *  narrow Suspense boundary so useSearchParams() never forces the whole page (including
  *  {children}) to bail out to client-side-only rendering. */
-function NavLinks({ slaBreachCount, untriagedCount }: { slaBreachCount: number; untriagedCount: number }) {
+function NavLinks({ slaBreachCount }: { slaBreachCount: number }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
+  const activeItem = findActiveItem(pathname, currentUrl);
 
   return (
     <>
@@ -69,13 +79,7 @@ function NavLinks({ slaBreachCount, untriagedCount }: { slaBreachCount: number; 
         <div key={gi} className={gi > 0 ? "mt-1" : ""}>
           {group.label && <div className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">{group.label}</div>}
           {group.items.map((item) => {
-            const [itemPath, itemQuery] = item.href.split("?");
-            // A bare-path item (e.g. "All Vulnerabilities") is active on its own path or any
-            // sub-route of it (e.g. "/administration/users"), as long as no filter query is
-            // applied -- otherwise it stayed highlighted alongside a filtered child link.
-            const active = itemQuery
-              ? item.href === currentUrl
-              : (pathname === itemPath || pathname.startsWith(`${itemPath}/`)) && !searchParams.toString();
+            const active = item === activeItem;
             return (
               <Link
                 key={item.href}
@@ -88,11 +92,6 @@ function NavLinks({ slaBreachCount, untriagedCount }: { slaBreachCount: number; 
                 {item.badge === "sla" && slaBreachCount > 0 && (
                   <span className="ml-auto text-[10px] font-semibold rounded-full px-1.5 py-0.5" style={{ background: "#7F1D1D", color: "#FCA5A5" }}>
                     {slaBreachCount}
-                  </span>
-                )}
-                {item.badge === "untriaged" && untriagedCount > 0 && (
-                  <span className="ml-auto text-[10px] font-semibold rounded-full px-1.5 py-0.5" style={{ background: "#1E3A5F", color: "#60A5FA" }}>
-                    {untriagedCount}
                   </span>
                 )}
               </Link>
@@ -122,14 +121,14 @@ function NavLinksFallback() {
   );
 }
 
-/** Breadcrumb only needs the pathname (no Suspense required) — matches by path, ignoring
- *  any active filter query string, since the breadcrumb label doesn't need to disambiguate. */
+/** Matches the currently active nav item including its filter query (e.g. shows
+ *  "New / Untriaged" rather than "All Vulnerabilities" on /vulnerabilities?status=New) —
+ *  needs useSearchParams(), so it's wrapped in Suspense at the call site. */
 function Breadcrumb() {
   const pathname = usePathname();
-  const activeItem = FLAT_ITEMS.find((i) => {
-    const itemPath = i.href.split("?")[0];
-    return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
-  });
+  const searchParams = useSearchParams();
+  const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
+  const activeItem = findActiveItem(pathname, currentUrl);
   const activeLabel = activeItem?.label ?? "Dashboard";
   const activeGroup = NAV.find((g) => g.items.includes(activeItem as NavItem))?.label;
 
@@ -148,6 +147,14 @@ function Breadcrumb() {
   );
 }
 
+function BreadcrumbFallback() {
+  return (
+    <div className="flex items-center gap-1.5 text-sm min-w-0">
+      <span className="text-slate-400 font-medium">HawkEye</span>
+    </div>
+  );
+}
+
 export default function Shell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [notifications] = useState(7);
@@ -161,7 +168,6 @@ export default function Shell({ children }: { children: ReactNode }) {
   };
 
   const slaBreachCount = vulnerabilities.filter((v) => isOpen(v) && calculateSlaStatus(v.severity, v.firstSeen, v.status).state === "Breached").length;
-  const untriagedCount = vulnerabilities.filter((v) => v.status === "New").length;
 
   return (
     <div className="flex h-full overflow-hidden" style={{ background: "var(--background)" }}>
@@ -178,7 +184,7 @@ export default function Shell({ children }: { children: ReactNode }) {
 
         <nav className="flex-1 overflow-y-auto py-3 scrollbar-hide">
           <Suspense fallback={<NavLinksFallback />}>
-            <NavLinks slaBreachCount={slaBreachCount} untriagedCount={untriagedCount} />
+            <NavLinks slaBreachCount={slaBreachCount} />
           </Suspense>
         </nav>
 
@@ -199,7 +205,9 @@ export default function Shell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <header className="flex items-center px-6 shrink-0 gap-4" style={{ height: 64, background: "#FFFFFF", borderBottom: "1px solid var(--border)" }}>
-          <Breadcrumb />
+          <Suspense fallback={<BreadcrumbFallback />}>
+            <Breadcrumb />
+          </Suspense>
 
           <div className="flex-1" />
 
