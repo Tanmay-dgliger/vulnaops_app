@@ -1,0 +1,17 @@
+id,scanner,file,records,newFindings,duplicates,updated,invalid,date,status,duration
+IMP-2026-0012,Qualys,qualys_0909.xlsx,4821,1284,2143,1012,42,2026-09-09,Processed,2m 14s
+IMP-2026-0011,Nessus,nessus_0908.xlsx,2341,412,1104,812,13,2026-09-08,Processed,1m 08s
+IMP-2026-0010,Rapid7,rapid7_0907.xlsx,5680,932,2821,1904,23,2026-09-07,Processed,3m 42s
+IMP-2026-0009,Tenable,tenable_0906.xlsx,3192,601,1844,728,19,2026-09-06,Processed,1m 57s
+IMP-2026-0008,Qualys,qualys_0905.xlsx,4644,198,3112,1314,20,2026-09-05,Processed,2m 31s
+IMP-2026-0007,Nessus,nessus_0903.xlsx,2109,88,1621,384,16,2026-09-03,Failed,—
+IMP-2026-0007,Tenable,tenable_0823.xlsx,2102,1092,1145,777,34,2026-08-23,Processed,2m 04s
+IMP-2026-0008,Qualys,qualys_0822.xlsx,2736,1076,1717,525,21,2026-08-22,Failed,2m 30s
+IMP-2026-0015,Nessus,nessus_0815.xlsx,3465,867,2318,637,7,2026-08-15,Processed,3m 46s
+IMP-2026-0009,Qualys,qualys_0812.xlsx,4700,526,2992,534,9,2026-08-12,Processed,3m 49s
+IMP-2026-0010,Rapid7,rapid7_0805.xlsx,2947,1222,2797,533,13,2026-08-05,Failed,3m 11s
+IMP-2026-0016,Qualys,qualys_0803.xlsx,5769,1095,1485,1864,36,2026-08-03,Processed,3m 48s
+IMP-2026-0014,Qualys,qualys_0729.xlsx,2121,492,1022,1309,37,2026-07-29,Processed,1m 13s
+IMP-2026-0011,Tenable,tenable_0717.xlsx,3327,374,1773,1033,27,2026-07-17,Failed,3m 43s
+IMP-2026-0012,Nessus,nessus_0712.xlsx,3911,1300,1036,1459,17,2026-07-12,Processed,3m 55s
+IMP-2026-0013,Rapid7,rapid7_0626.xlsx,2576,208,1314,1357,23,2026-06-26,Processed,2m 15s

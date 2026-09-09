@@ -1,0 +1,25 @@
+id,name,businessUnit,owner,criticality
+APP-01,Payments API,Payments,Rahul Sharma,Critical
+APP-02,CRM,CRM,Amit Kumar,High
+APP-03,Digital Portal,Digital,Neha Gupta,Critical
+APP-04,Core Banking DB,Core Banking,Priya Nair,Critical
+APP-05,Auth Service,Platform,Vikram Patel,Critical
+APP-06,Enterprise Service Bus,Integration,Manish Tiwari,High
+APP-07,Core Infrastructure,Infrastructure,Manish Tiwari,High
+APP-08,Customer Portal,Digital,Deepika Rao,Medium
+APP-09,Batch Processing,Operations,Deepika Rao,Medium
+APP-10,Email Gateway,IT,Priya Nair,Low
+APP-11,Log Aggregator,Platform,Deepika Rao,Medium
+APP-12,CDN,Digital,Vikram Patel,Low
+APP-13,Dev Sandbox,Engineering,Amit Kumar,Low
+APP-14,Fraud Detection Engine,Payments,Rahul Sharma,Critical
+APP-15,Loan Origination System,Core Banking,Priya Nair,High
+APP-16,Treasury Management,Core Banking,Priyanka Desai,Critical
+APP-17,HR Portal,IT,Rajiv Sinha,Medium
+APP-18,Vendor Management Portal,IT,Rajiv Sinha,Medium
+APP-19,Document Management System,Digital,Neha Gupta,Medium
+APP-20,Notification Service,Platform,Vikram Patel,Medium
+APP-21,API Gateway Platform,Platform,Vikram Patel,High
+APP-22,Mobile Banking App,Digital,Neha Gupta,Critical
+APP-23,Analytics Data Warehouse,Operations,Deepika Rao,Medium
+APP-24,Identity Provider,Platform,Vikram Patel,Critical

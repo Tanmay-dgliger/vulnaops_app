@@ -1,0 +1,46 @@
+id,name,type,environment,applicationId,businessUnit,criticality,ip,os,owner,lastScan,slaStatus
+AST-001,PAY-API-01,API Gateway,Production,APP-01,Payments,Critical,10.12.4.21,RHEL 9.2,Rahul Sharma,2026-09-09,Breached
+AST-002,PAY-API-02,API Gateway,Production,APP-01,Payments,Critical,10.12.4.22,RHEL 9.2,Rahul Sharma,2026-09-09,Due Soon
+AST-003,PAY-API-DR,API Gateway,DR,APP-01,Payments,High,10.99.4.21,RHEL 9.2,Manish Tiwari,2026-09-07,Within SLA
+AST-004,CRM-APP-01,Application,Production,APP-02,CRM,High,10.14.2.31,Ubuntu 22.04,Amit Kumar,2026-09-08,Within SLA
+AST-005,CRM-APP-03,Application,Production,APP-02,CRM,High,10.14.2.33,Ubuntu 22.04,Amit Kumar,2026-09-09,Due Soon
+AST-006,CRM-DB-01,Database,Production,APP-02,CRM,High,10.14.3.10,RHEL 9.2,Priyanka Desai,2026-09-06,Within SLA
+AST-007,WEB-PRD-12,Web Server,Production,APP-03,Digital,Critical,10.10.1.12,RHEL 8.7,Neha Gupta,2026-09-08,Due Soon
+AST-008,WEB-PRD-13,Web Server,Production,APP-03,Digital,High,10.10.1.13,RHEL 8.7,Neha Gupta,2026-09-08,Within SLA
+AST-009,DB-PRD-02,Database,Production,APP-04,Core Banking,Critical,10.20.8.44,RHEL 9.2,Priya Nair,2026-09-09,Within SLA
+AST-010,DB-PRD-03,Database,Production,APP-04,Core Banking,Critical,10.20.8.45,RHEL 9.2,Priyanka Desai,2026-09-06,Within SLA
+AST-011,AUTH-SVC-01,Auth Service,Production,APP-05,Platform,Critical,10.12.9.5,Ubuntu 22.04,Vikram Patel,2026-09-07,Within SLA
+AST-012,AUTH-SVC-02,Auth Service,Production,APP-05,Platform,Critical,10.12.9.6,Ubuntu 22.04,Vikram Patel,2026-09-07,Within SLA
+AST-013,ESB-CORE-01,Server,Production,APP-06,Integration,High,10.18.3.91,RHEL 9.2,Manish Tiwari,2026-09-09,Due Soon
+AST-014,LINUX-PRD-07,Server,Production,APP-07,Infrastructure,High,10.16.2.17,RHEL 9.2,Manish Tiwari,2026-09-09,Breached
+AST-015,LINUX-PRD-08,Server,Production,APP-07,Infrastructure,High,10.16.2.18,RHEL 9.2,Karan Mehra,2026-09-08,Within SLA
+AST-016,K8S-PRD-01,Server,Production,APP-07,Infrastructure,High,10.16.5.10,Amazon Linux 2023,Karan Mehra,2026-09-09,Within SLA
+AST-017,PORTAL-WEB-02,Web Server,Production,APP-08,Digital,Medium,10.10.1.22,Ubuntu 22.04,Deepika Rao,2026-09-08,Within SLA
+AST-018,BATCH-SRV-04,Server,Production,APP-09,Operations,Medium,10.22.5.14,RHEL 8.7,Deepika Rao,2026-09-07,Within SLA
+AST-019,BATCH-SRV-05,Server,Production,APP-09,Operations,Medium,10.22.5.15,RHEL 8.7,Deepika Rao,2026-09-05,Within SLA
+AST-020,MAIL-SRV-01,Server,Production,APP-10,IT,Low,10.8.1.3,Ubuntu 22.04,Priya Nair,2026-09-06,Within SLA
+AST-021,LOGS-AGG-01,Server,Staging,APP-11,Platform,Medium,10.24.1.9,Ubuntu 22.04,Deepika Rao,2026-09-06,Within SLA
+AST-022,STATIC-CDN-03,Server,Production,APP-12,Digital,Low,10.1.9.200,Alpine 3.18,Vikram Patel,2026-09-05,Within SLA
+AST-023,DEV-APP-08,Application,Development,APP-13,Engineering,Low,10.50.1.8,Ubuntu 22.04,Amit Kumar,2026-09-04,Within SLA
+AST-024,FRAUD-SVC-01,Application,Production,APP-14,Payments,Critical,10.12.6.10,RHEL 9.2,Rahul Sharma,2026-09-09,Due Soon
+AST-025,FRAUD-SVC-02,Application,Production,APP-14,Payments,Critical,10.12.6.11,RHEL 9.2,Rahul Sharma,2026-09-08,Within SLA
+AST-026,LOAN-APP-01,Application,Production,APP-15,Core Banking,High,10.20.2.14,RHEL 8.7,Priya Nair,2026-09-07,Within SLA
+AST-027,LOAN-DB-01,Database,Production,APP-15,Core Banking,High,10.20.3.15,RHEL 9.2,Priyanka Desai,2026-09-06,Within SLA
+AST-028,TREAS-APP-01,Application,Production,APP-16,Core Banking,Critical,10.20.4.18,RHEL 9.2,Priyanka Desai,2026-09-09,Breached
+AST-029,TREAS-DB-01,Database,Production,APP-16,Core Banking,Critical,10.20.4.19,RHEL 9.2,Priyanka Desai,2026-09-09,Within SLA
+AST-030,HR-PRTL-01,Web Server,Production,APP-17,IT,Medium,10.8.2.5,Ubuntu 22.04,Rajiv Sinha,2026-09-05,Within SLA
+AST-031,VEND-PRTL-01,Web Server,Production,APP-18,IT,Medium,10.8.2.6,Ubuntu 22.04,Rajiv Sinha,2026-09-04,Within SLA
+AST-032,DOC-MGT-01,Application,Production,APP-19,Digital,Medium,10.10.4.7,RHEL 8.7,Neha Gupta,2026-09-06,Within SLA
+AST-033,NOTIF-SVC-01,Server,Production,APP-20,Platform,Medium,10.24.2.3,Amazon Linux 2023,Vikram Patel,2026-09-07,Within SLA
+AST-034,NOTIF-SVC-02,Server,Staging,APP-20,Platform,Medium,10.24.2.4,Amazon Linux 2023,Vikram Patel,2026-09-03,Within SLA
+AST-035,APIGW-01,API Gateway,Production,APP-21,Platform,High,10.12.1.1,RHEL 9.2,Vikram Patel,2026-09-09,Due Soon
+AST-036,APIGW-02,API Gateway,Production,APP-21,Platform,High,10.12.1.2,RHEL 9.2,Vikram Patel,2026-09-09,Within SLA
+AST-037,MOBILE-APP-01,Application,Production,APP-22,Digital,Critical,10.10.6.1,RHEL 9.2,Neha Gupta,2026-09-09,Breached
+AST-038,MOBILE-APP-02,Application,Production,APP-22,Digital,Critical,10.10.6.2,RHEL 9.2,Neha Gupta,2026-09-08,Within SLA
+AST-039,ANALYTICS-01,Database,Production,APP-23,Operations,Medium,10.22.9.1,RHEL 9.2,Deepika Rao,2026-09-05,Within SLA
+AST-040,IDP-01,Auth Service,Production,APP-24,Platform,Critical,10.12.9.20,Ubuntu 22.04,Vikram Patel,2026-09-09,Due Soon
+AST-041,IDP-DR,Auth Service,DR,APP-24,Platform,High,10.99.9.20,Ubuntu 22.04,Vikram Patel,2026-09-07,Within SLA
+AST-042,WIN-PRD-01,Server,Production,APP-17,IT,Medium,10.8.3.9,Windows Server 2022,Rajiv Sinha,2026-09-04,Within SLA
+AST-043,CRM-APP-02,Application,Staging,APP-02,CRM,Medium,10.14.2.32,Ubuntu 22.04,Amit Kumar,2026-09-02,Within SLA
+AST-044,PAY-DB-01,Database,Production,APP-01,Payments,Critical,10.12.5.5,RHEL 9.2,Rahul Sharma,2026-09-09,Within SLA
+AST-045,DEV-APP-09,Application,Development,APP-13,Engineering,Low,10.50.1.9,Ubuntu 22.04,Amit Kumar,2026-09-01,Within SLA

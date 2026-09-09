@@ -1,0 +1,106 @@
+id,timestamp,user,userRole,action,entity,entityType,from,to,detail,severity,ip
+ACT-000001,2026-09-09T16:32:00,Rahul Sharma,Security Analyst,status_changed,CVE-2025-3333,CVE,Triaged,Remediating,,Critical,10.0.1.44
+ACT-000002,2026-09-09T14:20:00,Tanmay Singh,Security Administrator,assigned,CVE-2025-3333,CVE,Unassigned,Payments Infrastructure,,Critical,10.0.1.88
+ACT-000003,2026-09-09T12:11:00,System,Automation,sla_breach,CVE-2024-2222,CVE,,,SLA breached after 30-day threshold exceeded on WEB-PRD-12,High,—
+ACT-000004,2026-09-09T09:44:00,Neha Gupta,Application Owner,revalidation,CVE-2024-2222,CVE,,,Revalidation scan requested post-patch deployment,High,10.0.2.31
+ACT-000099,2026-09-08T14:21:00,Priyanka Desai,Database Administrator,status_changed,CVE-2026-2856,CVE,Closed,Remediating,,High,10.0.8.58
+ACT-000005,2026-09-08T10:11:00,Amit Kumar,Security Analyst,triage_completed,CVE-2025-1111,CVE,,,Risk scored 91/100 - Disposition: Remediate,Critical,10.0.1.52
+ACT-000006,2026-09-08T08:30:00,Anita Rao,Security Manager,exception_approved,EXC-2026-0127,Exception,,,False positive exception approved for CVE-2024-2222 - 90 days,High,10.0.0.12
+ACT-000007,2026-09-07T23:04:00,System,Automation,import,qualys_0907.xlsx,Import,,,"Qualys scan: 4,821 records - 1,284 new findings",,—
+ACT-000008,2026-09-07T18:32:00,System,Automation,import,nessus_0907.xlsx,Import,,,"Nessus scan: 2,341 records - 412 new findings",,—
+ACT-000064,2026-09-07T16:06:00,Priyanka Desai,Database Administrator,revalidation,CVE-2026-8641,CVE,,,,Low,10.0.3.71
+ACT-000049,2026-09-07T14:45:00,Sanya Mehta,Application Owner,revalidation,CVE-2026-2787,CVE,,,,Medium,10.0.7.206
+ACT-000018,2026-09-07T14:36:00,Neha Gupta,Application Owner,comment,CVE-2026-6413,CVE,,,Update logged for CVE-2026-6413 on AST-026.,Critical,10.0.1.4
+ACT-000009,2026-09-07T14:15:00,Tanmay Singh,Security Administrator,severity_override,CVE-2024-9944,CVE,Medium,High,,High,10.0.1.88
+ACT-000010,2026-09-06T16:44:00,Priya Nair,Application Owner,comment,CVE-2024-9944,CVE,,,Patch identified - KB-2026-0091. Change request in progress,High,10.0.3.19
+ACT-000011,2026-09-06T11:02:00,Vikram Patel,Infrastructure Owner,false_positive,CVE-2023-9841,CVE,,,Marked as false positive - SSL cert validated externally,Low,10.0.4.77
+ACT-000012,2026-09-05T09:30:00,Tanmay Singh,Security Administrator,exception_rejected,EXC-2026-0098,Exception,,,Rejected - insufficient compensating controls documented,,10.0.1.88
+ACT-000013,2026-09-04T15:22:00,System,Automation,merged,CVE-2025-1111,CVE,,,Duplicate merged - 98% confidence match on PAY-API-01:443,Critical,—
+ACT-000014,2026-09-03T10:08:00,Manish Tiwari,Infrastructure Owner,status_changed,CVE-2024-8822,CVE,Assigned,In Progress,,Critical,10.0.5.22
+ACT-000015,2026-09-02T08:45:00,System,Automation,import,rapid7_0902.xlsx,Import,,,"Rapid7 scan: 5,680 records - 932 new findings",,—
+ACT-000026,2026-09-01T15:38:00,Suresh Iyer,CISO,comment,CVE-2026-4607,CVE,,,Update logged for CVE-2026-4607 on AST-022.,Critical,10.0.1.193
+ACT-000027,2026-09-01T09:36:00,Vikram Patel,Infrastructure Owner,severity_override,CVE-2026-6016,CVE,High,Medium,,High,10.0.7.190
+ACT-000080,2026-08-25T13:06:00,Karan Mehra,DevOps Engineer,triage_completed,CVE-2026-1506,CVE,,,Risk scored 41/100.,Medium,10.0.6.60
+ACT-000074,2026-08-20T20:46:00,Arun Joshi,Digital Platform Owner,severity_override,CVE-2026-5998,CVE,Low,Critical,,Critical,10.0.9.107
+ACT-000097,2026-08-19T09:37:00,Deepika Rao,Platform Engineer,assigned,CVE-2026-4218,CVE,,,,High,10.0.1.76
+ACT-000060,2026-08-19T08:17:00,Tanmay Singh,Security Administrator,assigned,CVE-2026-5000,CVE,,,,High,10.0.6.54
+ACT-000046,2026-08-17T20:17:00,Karan Mehra,DevOps Engineer,revalidation,CVE-2026-3866,CVE,,,,High,10.0.3.134
+ACT-000102,2026-08-17T10:12:00,Suresh Iyer,CISO,status_changed,CVE-2026-2613,CVE,Validation,Remediating,,High,10.0.7.127
+ACT-000087,2026-08-16T09:22:00,Vikram Patel,Infrastructure Owner,severity_override,CVE-2026-7733,CVE,Medium,High,,High,10.0.1.48
+ACT-000044,2026-08-08T16:47:00,Karan Mehra,DevOps Engineer,triage_completed,CVE-2026-5045,CVE,,,Risk scored 6/100.,Low,10.0.1.53
+ACT-000078,2026-08-05T20:53:00,Priyanka Desai,Database Administrator,revalidation,CVE-2026-7733,CVE,,,,High,10.0.4.145
+ACT-000077,2026-08-05T10:17:00,Anita Rao,Security Manager,comment,CVE-2026-3781,CVE,,,Update logged for CVE-2026-3781 on AST-025.,High,10.0.6.155
+ACT-000017,2026-08-03T11:24:00,Suresh Iyer,CISO,severity_override,CVE-2025-1111,CVE,High,Critical,,Critical,10.0.4.85
+ACT-000022,2026-08-02T15:18:00,Rahul Sharma,Security Analyst,triage_completed,CVE-2026-3866,CVE,,,Risk scored 60/100.,High,10.0.1.60
+ACT-000082,2026-07-31T11:21:00,Deepika Rao,Platform Engineer,assigned,CVE-2026-4426,CVE,,,,High,10.0.5.208
+ACT-000090,2026-07-30T12:08:00,Tanmay Singh,Security Administrator,assigned,CVE-2026-8184,CVE,,,,Medium,10.0.3.189
+ACT-000104,2026-07-30T11:31:00,Rajiv Sinha,IT Owner,assigned,CVE-2026-7682,CVE,,,,Critical,10.0.7.86
+ACT-000061,2026-07-29T07:12:00,Anita Rao,Security Manager,status_changed,CVE-2026-6674,CVE,New,Validation,,Medium,10.0.7.35
+ACT-000028,2026-07-28T11:34:00,Sanya Mehta,Application Owner,triage_completed,CVE-2026-5692,CVE,,,Risk scored 94/100.,Critical,10.0.1.164
+ACT-000039,2026-07-25T07:16:00,Sanya Mehta,Application Owner,comment,CVE-2026-5139,CVE,,,Update logged for CVE-2026-5139 on AST-037.,Medium,10.0.7.18
+ACT-000048,2026-07-22T11:35:00,Rahul Sharma,Security Analyst,assigned,CVE-2025-1111,CVE,,,,Critical,10.0.2.231
+ACT-000089,2026-07-21T08:57:00,Suresh Iyer,CISO,revalidation,CVE-2026-2067,CVE,,,,Low,10.0.9.35
+ACT-000101,2026-07-19T15:15:00,Vikram Patel,Infrastructure Owner,assigned,CVE-2026-3090,CVE,,,,Critical,10.0.4.149
+ACT-000035,2026-07-18T20:10:00,Karan Mehra,DevOps Engineer,triage_completed,CVE-2026-1633,CVE,,,Risk scored 51/100.,Medium,10.0.7.37
+ACT-000058,2026-07-18T08:55:00,Tanmay Singh,Security Administrator,severity_override,CVE-2026-7559,CVE,High,Low,,Medium,10.0.2.212
+ACT-000042,2026-07-17T15:11:00,Suresh Iyer,CISO,revalidation,CVE-2026-6948,CVE,,,,Low,10.0.7.242
+ACT-000068,2026-07-15T07:28:00,Karan Mehra,DevOps Engineer,status_changed,CVE-2026-6839,CVE,Validation,Accepted Risk,,Critical,10.0.4.146
+ACT-000075,2026-07-14T07:53:00,Arun Joshi,Digital Platform Owner,triage_completed,CVE-2024-2222,CVE,,,Risk scored 88/100.,High,10.0.8.28
+ACT-000070,2026-07-12T16:48:00,Vikram Patel,Infrastructure Owner,revalidation,CVE-2026-1585,CVE,,,,Critical,10.0.2.86
+ACT-000094,2026-07-11T11:33:00,Suresh Iyer,CISO,triage_completed,CVE-2026-7959,CVE,,,Risk scored 38/100.,Medium,10.0.1.65
+ACT-000065,2026-07-10T10:47:00,Anita Rao,Security Manager,assigned,CVE-2026-2604,CVE,,,,Medium,10.0.4.119
+ACT-000066,2026-07-09T08:53:00,Priya Nair,Application Owner,severity_override,CVE-2026-5692,CVE,Critical,Medium,,Critical,10.0.8.236
+ACT-000038,2026-07-06T11:06:00,Tanmay Singh,Security Administrator,triage_completed,CVE-2026-3090,CVE,,,Risk scored 86/100.,Critical,10.0.4.223
+ACT-000023,2026-07-02T08:06:00,Tanmay Singh,Security Administrator,status_changed,CVE-2024-8822,CVE,Triaged,Triaged,,Critical,10.0.8.42
+ACT-000050,2026-06-28T17:57:00,Amit Kumar,Security Analyst,assigned,CVE-2026-7325,CVE,,,,Medium,10.0.5.178
+ACT-000054,2026-06-27T13:04:00,Sanya Mehta,Application Owner,triage_completed,CVE-2026-2067,CVE,,,Risk scored 26/100.,Low,10.0.3.232
+ACT-000067,2026-06-26T17:09:00,Priya Nair,Application Owner,assigned,CVE-2026-8497,CVE,,,,Medium,10.0.9.26
+ACT-000031,2026-06-26T16:12:00,Manish Tiwari,Infrastructure Owner,assigned,CVE-2026-4491,CVE,,,,Critical,10.0.1.77
+ACT-000062,2026-06-25T15:29:00,Rajiv Sinha,IT Owner,revalidation,CVE-2026-9705,CVE,,,,Low,10.0.1.197
+ACT-000021,2026-06-17T20:23:00,Arun Joshi,Digital Platform Owner,triage_completed,CVE-2026-2639,CVE,,,Risk scored 73/100.,High,10.0.3.88
+ACT-000034,2026-06-17T16:36:00,Rajiv Sinha,IT Owner,assigned,CVE-2026-5692,CVE,,,,Critical,10.0.3.195
+ACT-000029,2026-06-16T16:27:00,Deepika Rao,Platform Engineer,severity_override,CVE-2026-1503,CVE,High,Medium,,Low,10.0.2.62
+ACT-000016,2026-06-16T15:48:00,Suresh Iyer,CISO,assigned,CVE-2026-2604,CVE,,,,Medium,10.0.3.192
+ACT-000019,2026-06-16T12:11:00,Tanmay Singh,Security Administrator,severity_override,CVE-2026-7869,CVE,Low,Low,,Medium,10.0.4.117
+ACT-000073,2026-06-15T10:44:00,Rajiv Sinha,IT Owner,triage_completed,CVE-2026-8641,CVE,,,Risk scored 10/100.,Low,10.0.8.46
+ACT-000085,2026-06-14T14:24:00,Tanmay Singh,Security Administrator,assigned,CVE-2026-9040,CVE,,,,High,10.0.7.94
+ACT-000020,2026-06-12T15:03:00,Anita Rao,Security Manager,comment,CVE-2026-7559,CVE,,,Update logged for CVE-2026-7559 on AST-010.,Medium,10.0.9.130
+ACT-000071,2026-06-11T13:57:00,Sanya Mehta,Application Owner,comment,CVE-2026-5086,CVE,,,Update logged for CVE-2026-5086 on AST-037.,Critical,10.0.8.6
+ACT-000037,2026-06-11T07:42:00,Priyanka Desai,Database Administrator,assigned,CVE-2026-1958,CVE,,,,Medium,10.0.7.203
+ACT-000043,2026-06-10T19:06:00,Priyanka Desai,Database Administrator,comment,CVE-2026-3866,CVE,,,Update logged for CVE-2026-3866 on AST-014.,High,10.0.2.47
+ACT-000032,2026-06-10T12:36:00,Sanya Mehta,Application Owner,status_changed,CVE-2026-2613,CVE,Closed,Remediating,,High,10.0.9.52
+ACT-000052,2026-06-09T11:02:00,Suresh Iyer,CISO,comment,CVE-2026-4607,CVE,,,Update logged for CVE-2026-4607 on AST-022.,Critical,10.0.5.243
+ACT-000091,2026-06-09T08:22:00,Rajiv Sinha,IT Owner,assigned,CVE-2025-1111,CVE,,,,Critical,10.0.4.180
+ACT-000079,2026-06-08T17:12:00,Priya Nair,Application Owner,comment,CVE-2026-4491,CVE,,,Update logged for CVE-2026-4491 on AST-009.,Critical,10.0.4.91
+ACT-000033,2026-06-06T15:58:00,Tanmay Singh,Security Administrator,assigned,CVE-2026-3594,CVE,,,,Critical,10.0.4.45
+ACT-000093,2026-06-04T17:44:00,Sanya Mehta,Application Owner,status_changed,CVE-2026-1316,CVE,New,Triaged,,Critical,10.0.4.214
+ACT-000040,2026-06-04T08:18:00,Tanmay Singh,Security Administrator,status_changed,CVE-2026-6413,CVE,Remediating,Triaged,,Critical,10.0.2.82
+ACT-000083,2026-05-30T17:08:00,Tanmay Singh,Security Administrator,status_changed,CVE-2026-2639,CVE,Assigned,Accepted Risk,,High,10.0.5.86
+ACT-000055,2026-05-26T10:10:00,Sunita Iyer,Compliance Officer,triage_completed,CVE-2026-1958,CVE,,,Risk scored 41/100.,Medium,10.0.5.231
+ACT-000096,2026-05-25T13:43:00,Tanmay Singh,Security Administrator,comment,CVE-2026-5086,CVE,,,Update logged for CVE-2026-5086 on AST-037.,Critical,10.0.2.241
+ACT-000105,2026-05-22T13:56:00,Priya Nair,Application Owner,status_changed,CVE-2026-7325,CVE,Closed,Accepted Risk,,Medium,10.0.2.126
+ACT-000072,2026-05-22T07:32:00,Neha Gupta,Application Owner,assigned,CVE-2026-7682,CVE,,,,Critical,10.0.6.118
+ACT-000063,2026-05-20T10:09:00,Vikram Patel,Infrastructure Owner,triage_completed,CVE-2026-3807,CVE,,,Risk scored 89/100.,Critical,10.0.6.227
+ACT-000041,2026-05-13T15:15:00,Deepika Rao,Platform Engineer,comment,CVE-2026-5000,CVE,,,Update logged for CVE-2026-5000 on AST-033.,High,10.0.1.136
+ACT-000088,2026-05-13T13:51:00,Suresh Iyer,CISO,assigned,CVE-2026-3090,CVE,,,,Critical,10.0.8.25
+ACT-000030,2026-05-07T19:27:00,Sanya Mehta,Application Owner,triage_completed,CVE-2026-2121,CVE,,,Risk scored 39/100.,Medium,10.0.2.7
+ACT-000059,2026-05-07T17:46:00,Amit Kumar,Security Analyst,severity_override,CVE-2026-8853,CVE,Critical,High,,Medium,10.0.5.203
+ACT-000025,2026-05-06T08:08:00,Anita Rao,Security Manager,triage_completed,CVE-2026-3248,CVE,,,Risk scored 84/100.,Critical,10.0.8.120
+ACT-000024,2026-05-03T07:28:00,Vikram Patel,Infrastructure Owner,triage_completed,CVE-2026-3152,CVE,,,Risk scored 79/100.,High,10.0.6.98
+ACT-000036,2026-05-02T08:02:00,Neha Gupta,Application Owner,revalidation,CVE-2026-1633,CVE,,,,Medium,10.0.6.25
+ACT-000056,2026-04-30T10:24:00,Amit Kumar,Security Analyst,comment,CVE-2026-3356,CVE,,,Update logged for CVE-2026-3356 on AST-029.,High,10.0.7.39
+ACT-000086,2026-04-30T10:04:00,Manish Tiwari,Infrastructure Owner,revalidation,CVE-2025-1111,CVE,,,,Critical,10.0.7.222
+ACT-000103,2026-04-30T09:25:00,Sunita Iyer,Compliance Officer,revalidation,CVE-2026-5692,CVE,,,,Critical,10.0.8.89
+ACT-000095,2026-04-29T13:36:00,Priya Nair,Application Owner,comment,CVE-2026-3470,CVE,,,Update logged for CVE-2026-3470 on AST-026.,Low,10.0.9.133
+ACT-000092,2026-04-29T09:51:00,Priya Nair,Application Owner,comment,CVE-2026-6208,CVE,,,Update logged for CVE-2026-6208 on AST-042.,Critical,10.0.6.226
+ACT-000081,2026-04-27T13:24:00,Rajiv Sinha,IT Owner,assigned,CVE-2026-7959,CVE,,,,Medium,10.0.4.210
+ACT-000100,2026-04-27T09:43:00,Vikram Patel,Infrastructure Owner,severity_override,CVE-2026-5086,CVE,Low,Critical,,Critical,10.0.6.56
+ACT-000057,2026-04-25T13:58:00,Karan Mehra,DevOps Engineer,status_changed,CVE-2025-1111,CVE,Accepted Risk,Remediating,,Critical,10.0.2.121
+ACT-000069,2026-04-25T09:42:00,Neha Gupta,Application Owner,triage_completed,CVE-2026-1585,CVE,,,Risk scored 74/100.,Critical,10.0.1.140
+ACT-000047,2026-04-24T20:05:00,Karan Mehra,DevOps Engineer,severity_override,CVE-2026-2096,CVE,Critical,Medium,,Low,10.0.5.193
+ACT-000076,2026-04-21T14:42:00,Sunita Iyer,Compliance Officer,triage_completed,CVE-2026-1585,CVE,,,Risk scored 74/100.,Critical,10.0.5.174
+ACT-000045,2026-04-19T18:02:00,Deepika Rao,Platform Engineer,status_changed,CVE-2026-6376,CVE,Assigned,Triaged,,Critical,10.0.9.25
+ACT-000053,2026-04-19T14:26:00,Manish Tiwari,Infrastructure Owner,triage_completed,CVE-2026-5000,CVE,,,Risk scored 66/100.,High,10.0.7.80
+ACT-000051,2026-04-19T07:24:00,Vikram Patel,Infrastructure Owner,revalidation,CVE-2025-1111,CVE,,,,Critical,10.0.2.115
+ACT-000084,2026-04-17T20:46:00,Priyanka Desai,Database Administrator,severity_override,CVE-2026-6208,CVE,Critical,Critical,,Critical,10.0.7.21
+ACT-000098,2026-04-16T15:57:00,Priyanka Desai,Database Administrator,assigned,CVE-2026-6555,CVE,,,,Medium,10.0.8.64

@@ -1,0 +1,17 @@
+id,name,role,email,businessUnit,initials,color
+USR-01,Tanmay Singh,Security Administrator,tanmay.singh@vulnops-demo.com,Security,TS,#065F46
+USR-02,Rahul Sharma,Security Analyst,rahul.sharma@vulnops-demo.com,Payments,RS,#1D4ED8
+USR-03,Amit Kumar,Security Analyst,amit.kumar@vulnops-demo.com,CRM,AK,#7C3AED
+USR-04,Neha Gupta,Application Owner,neha.gupta@vulnops-demo.com,Digital,NG,#0F766E
+USR-05,Priya Nair,Application Owner,priya.nair@vulnops-demo.com,Core Banking,PN,#831843
+USR-06,Vikram Patel,Infrastructure Owner,vikram.patel@vulnops-demo.com,Platform,VP,#1E3A5F
+USR-07,Manish Tiwari,Infrastructure Owner,manish.tiwari@vulnops-demo.com,Infrastructure,MT,#DC2626
+USR-08,Deepika Rao,Platform Engineer,deepika.rao@vulnops-demo.com,Platform,DR,#0369A1
+USR-09,Anita Rao,Security Manager,anita.rao@vulnops-demo.com,Security,AR,#92400E
+USR-10,Suresh Iyer,CISO,suresh.iyer@vulnops-demo.com,Security,SI,#334155
+USR-11,Sanya Mehta,Application Owner,sanya.mehta@vulnops-demo.com,Digital,SM,#A21CAF
+USR-12,Rajiv Sinha,IT Owner,rajiv.sinha@vulnops-demo.com,IT,RJ,#0EA5E9
+USR-13,Arun Joshi,Digital Platform Owner,arun.joshi@vulnops-demo.com,Digital,AJ,#16A34A
+USR-14,Priyanka Desai,Database Administrator,priyanka.desai@vulnops-demo.com,Core Banking,PD,#DB2777
+USR-15,Karan Mehra,DevOps Engineer,karan.mehra@vulnops-demo.com,Infrastructure,KM,#CA8A04
+USR-16,Sunita Iyer,Compliance Officer,sunita.iyer@vulnops-demo.com,Security,SU,#7C2D12
