@@ -3,8 +3,9 @@ import { Inter, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { loadAllData } from "@/lib/csv";
 import { DataProvider } from "@/lib/state/DataContext";
+import { AuthProvider } from "@/lib/state/AuthContext";
 import { ToastProvider } from "@/components/common/Toast";
-import Shell from "@/components/layout/Shell";
+import AppFrame from "@/components/layout/AppFrame";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
 const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
@@ -28,9 +29,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${inter.variable} ${dmSans.variable} ${jetbrainsMono.variable} font-sans`} style={{ height: "100%" }}>
         <ToastProvider>
-          <DataProvider initial={data}>
-            <Shell>{children}</Shell>
-          </DataProvider>
+          <AuthProvider>
+            <DataProvider initial={data}>
+              <AppFrame>{children}</AppFrame>
+            </DataProvider>
+          </AuthProvider>
         </ToastProvider>
       </body>
     </html>

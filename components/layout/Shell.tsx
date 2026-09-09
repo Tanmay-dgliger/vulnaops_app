@@ -2,12 +2,13 @@
 
 import { ReactNode, Suspense, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard, Shield, AlertTriangle, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
-  ScrollText, Settings, Search, Bell, HelpCircle, ChevronDown, ChevronRight,
+  ScrollText, Settings, Search, Bell, HelpCircle, ChevronRight, LogOut,
 } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
+import { useAuth } from "@/lib/state/AuthContext";
 import { calculateSlaStatus } from "@/lib/business/sla";
 import { isOpen } from "@/lib/business/metrics";
 
@@ -68,9 +69,12 @@ function NavLinks({ slaBreachCount, untriagedCount }: { slaBreachCount: number; 
           {group.label && <div className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">{group.label}</div>}
           {group.items.map((item) => {
             const [itemPath, itemQuery] = item.href.split("?");
-            // A bare-path item (e.g. "All Vulnerabilities") is only active with no filters applied;
-            // otherwise it stayed highlighted alongside whichever filtered child link was active.
-            const active = itemQuery ? item.href === currentUrl : pathname === itemPath && !searchParams.toString();
+            // A bare-path item (e.g. "All Vulnerabilities") is active on its own path or any
+            // sub-route of it (e.g. "/administration/users"), as long as no filter query is
+            // applied -- otherwise it stayed highlighted alongside a filtered child link.
+            const active = itemQuery
+              ? item.href === currentUrl
+              : (pathname === itemPath || pathname.startsWith(`${itemPath}/`)) && !searchParams.toString();
             return (
               <Link
                 key={item.href}
@@ -121,7 +125,10 @@ function NavLinksFallback() {
  *  any active filter query string, since the breadcrumb label doesn't need to disambiguate. */
 function Breadcrumb() {
   const pathname = usePathname();
-  const activeItem = FLAT_ITEMS.find((i) => i.href.split("?")[0] === pathname);
+  const activeItem = FLAT_ITEMS.find((i) => {
+    const itemPath = i.href.split("?")[0];
+    return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+  });
   const activeLabel = activeItem?.label ?? "Dashboard";
   const activeGroup = NAV.find((g) => g.items.includes(activeItem as NavItem))?.label;
 
@@ -141,9 +148,16 @@ function Breadcrumb() {
 }
 
 export default function Shell({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [notifications] = useState(7);
   const [searchFocused, setSearchFocused] = useState(false);
   const { vulnerabilities } = useData();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
+  };
 
   const slaBreachCount = vulnerabilities.filter((v) => isOpen(v) && calculateSlaStatus(v.severity, v.firstSeen, v.status).state === "Breached").length;
   const untriagedCount = vulnerabilities.filter((v) => v.status === "New").length;
@@ -169,16 +183,16 @@ export default function Shell({ children }: { children: ReactNode }) {
 
         <div className="px-4 py-4 border-t border-white/[0.06]">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Security Operations</div>
-          <div className="flex items-center gap-2.5">
+          <button onClick={handleLogout} className="w-full flex items-center gap-2.5 group" aria-label="Sign out" title="Sign out">
             <div className="flex items-center justify-center rounded-full shrink-0 text-xs font-semibold text-white" style={{ width: 30, height: 30, background: "#1E40AF" }}>
               TS
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 text-left flex-1">
               <div className="text-[13px] font-medium text-slate-200 leading-none truncate">Tanmay Singh</div>
               <div className="text-[11px] text-slate-500 mt-0.5 truncate">Security Administrator</div>
             </div>
-            <ChevronDown size={14} className="ml-auto text-slate-600 shrink-0" />
-          </div>
+            <LogOut size={14} className="text-slate-600 shrink-0 group-hover:text-slate-300 transition-colors" />
+          </button>
         </div>
       </aside>
 

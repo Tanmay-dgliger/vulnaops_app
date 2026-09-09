@@ -6,6 +6,7 @@ import { getRemediations } from "./remediations";
 import { getExceptions } from "./exceptions";
 import { getScannerImports } from "./scanner-imports";
 import { getActivities } from "./activities";
+import { getUserAccounts } from "./user-accounts";
 
 export function loadAllData() {
   return {
@@ -17,6 +18,7 @@ export function loadAllData() {
     exceptions: getExceptions(),
     scannerImports: getScannerImports(),
     activities: getActivities(),
+    userAccounts: getUserAccounts(),
   };
 }
 

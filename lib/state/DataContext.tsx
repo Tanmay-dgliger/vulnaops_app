@@ -7,6 +7,7 @@ import type { Remediation, RemediationStatus } from "@/types/remediation";
 import type { Exception, ExceptionStatus } from "@/types/exception";
 import type { Activity, ActionType, EntityType } from "@/types/activity";
 import type { ScannerImport } from "@/types/scanner-import";
+import type { UserAccount } from "@/types/user-account";
 import { calculateRiskScore } from "@/lib/business/risk-score";
 import { useToast } from "@/components/common/Toast";
 
@@ -58,6 +59,9 @@ interface DataContextValue extends DataState {
   simulateValidation: (id: string) => void;
   addComment: (remediationId: string, text: string, user: string) => void;
   importScan: (scanner: string, file: string) => ScannerImport;
+  addUserAccount: (input: UserAccount) => boolean;
+  updateUserAccount: (originalUsername: string, input: UserAccount) => boolean;
+  deleteUserAccount: (username: string) => void;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -81,6 +85,7 @@ export function DataProvider({ initial, children }: { initial: AppData; children
   const [scannerImports, setScannerImports] = useState(initial.scannerImports);
   const [activities, setActivities] = useState(initial.activities);
   const [users] = useState(initial.users);
+  const [userAccounts, setUserAccounts] = useState(initial.userAccounts);
   const { notify } = useToast();
 
   const vulnById = useMemo(() => new Map(vulnerabilities.map((v) => [v.id, v])), [vulnerabilities]);
@@ -450,6 +455,54 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     [addActivity, notify]
   );
 
+  const addUserAccount = useCallback(
+    (input: UserAccount): boolean => {
+      const username = input.username.trim();
+      if (!username) return false;
+      const exists = userAccounts.some((u) => u.username.toLowerCase() === username.toLowerCase());
+      if (exists) {
+        notify(`Username "${username}" already exists`);
+        return false;
+      }
+      setUserAccounts((prev) => [...prev, { ...input, username }]);
+      addActivity({
+        user: CURRENT_USER.name,
+        userRole: CURRENT_USER.role,
+        action: "comment",
+        entity: username,
+        entityType: "System",
+        detail: `User account created — ${username} (${input.role})`,
+      });
+      notify(`User "${username}" added`);
+      return true;
+    },
+    [userAccounts, addActivity, notify]
+  );
+
+  const updateUserAccount = useCallback(
+    (originalUsername: string, input: UserAccount): boolean => {
+      const username = input.username.trim();
+      if (!username) return false;
+      const conflict = userAccounts.some((u) => u.username.toLowerCase() === username.toLowerCase() && u.username.toLowerCase() !== originalUsername.toLowerCase());
+      if (conflict) {
+        notify(`Username "${username}" already exists`);
+        return false;
+      }
+      setUserAccounts((prev) => prev.map((u) => (u.username === originalUsername ? { ...input, username } : u)));
+      notify(`User "${username}" updated`);
+      return true;
+    },
+    [userAccounts, notify]
+  );
+
+  const deleteUserAccount = useCallback(
+    (username: string) => {
+      setUserAccounts((prev) => prev.filter((u) => u.username !== username));
+      notify(`User "${username}" deleted`);
+    },
+    [notify]
+  );
+
   const value: DataContextValue = {
     vulnerabilities,
     assets,
@@ -459,6 +512,7 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     scannerImports,
     activities,
     users,
+    userAccounts,
     getVulnerability: (id) => vulnById.get(id),
     getAsset: (id) => assetById.get(id),
     getApplication: (id) => applicationById.get(id),
@@ -479,6 +533,9 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     simulateValidation,
     addComment,
     importScan,
+    addUserAccount,
+    updateUserAccount,
+    deleteUserAccount,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
