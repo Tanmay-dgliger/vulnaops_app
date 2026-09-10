@@ -1,12 +1,13 @@
 "use client";
 
-import { ReactNode, Suspense, useState } from "react";
+import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard, Shield, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
   ScrollText, Settings, Search, Bell, HelpCircle, ChevronRight, LogOut,
 } from "lucide-react";
+import type { Activity } from "@/types/activity";
 import { useData } from "@/lib/state/DataContext";
 import { useAuth } from "@/lib/state/AuthContext";
 import { calculateSlaStatus } from "@/lib/business/sla";
@@ -155,12 +156,94 @@ function BreadcrumbFallback() {
   );
 }
 
+const ACTIVITY_LABEL: Partial<Record<Activity["action"], string>> = {
+  status_changed: "Status changed",
+  assigned: "Assigned",
+  triage_completed: "Triage completed",
+  import: "Scan imported",
+  false_positive: "Marked false positive",
+  exception_approved: "Exception approved",
+  exception_rejected: "Exception rejected",
+  merged: "Duplicate merged",
+  revalidation: "Revalidation requested",
+  comment: "Comment added",
+  severity_override: "Severity overridden",
+  sla_breach: "SLA breached",
+  validated: "Validation passed",
+  closed: "Finding closed",
+};
+
+function NotificationsPanel({ activities, onClose }: { activities: Activity[]; onClose: () => void }) {
+  const router = useRouter();
+  const recent = activities.slice(0, 8);
+
+  return (
+    <div
+      className="absolute right-0 top-11 z-50 rounded-lg shadow-lg overflow-hidden"
+      style={{ width: 340, background: "#FFFFFF", border: "1px solid var(--border)" }}
+    >
+      <div className="px-4 py-2.5 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+        <span className="text-sm font-semibold text-slate-800">Notifications</span>
+        <span className="text-[11px] text-slate-400">{recent.length} recent</span>
+      </div>
+      <div className="max-h-96 overflow-y-auto">
+        {recent.length === 0 ? (
+          <div className="px-4 py-6 text-center text-sm text-slate-400">No recent activity</div>
+        ) : (
+          recent.map((a) => (
+            <div key={a.id} className="px-4 py-2.5 border-b last:border-0 hover:bg-slate-50 transition-colors" style={{ borderColor: "#F1F5F9" }}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-slate-800">{ACTIVITY_LABEL[a.action] ?? a.action}</span>
+                <span className="text-[10px] font-mono text-slate-400 shrink-0">{a.timestamp.replace("T", " ").slice(0, 16)}</span>
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5 truncate">
+                <span className="font-mono font-medium text-blue-700">{a.entity}</span>
+                {a.detail ? ` — ${a.detail}` : ""}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      <button
+        onClick={() => { onClose(); router.push("/audit"); }}
+        className="w-full text-center text-xs font-medium text-blue-600 py-2.5 border-t hover:bg-slate-50 transition-colors"
+        style={{ borderColor: "var(--border)" }}
+      >
+        View all activity
+      </button>
+    </div>
+  );
+}
+
 export default function Shell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [notifications] = useState(7);
+  const [notifications, setNotifications] = useState(7);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const { vulnerabilities } = useData();
+  const [searchQuery, setSearchQuery] = useState("");
+  const notifRef = useRef<HTMLDivElement>(null);
+  const { vulnerabilities, activities } = useData();
   const { logout } = useAuth();
+
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [notifOpen]);
+
+  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    const q = searchQuery.trim();
+    router.push(q ? `/vulnerabilities?q=${encodeURIComponent(q)}` : "/vulnerabilities");
+  };
+
+  const toggleNotifications = () => {
+    setNotifOpen((open) => !open);
+    if (!notifOpen) setNotifications(0);
+  };
 
   const handleLogout = () => {
     logout();
@@ -219,16 +302,27 @@ export default function Shell({ children }: { children: ReactNode }) {
             <input
               className="bg-transparent text-sm outline-none text-slate-700 placeholder-slate-400 flex-1 min-w-0"
               placeholder="Search vulnerabilities..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchSubmit}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
             />
             <kbd className="text-[10px] text-slate-400 bg-white border border-slate-200 rounded px-1 font-mono shrink-0">⌘K</kbd>
           </div>
 
-          <button className="relative flex items-center justify-center rounded-md transition-colors hover:bg-slate-50" style={{ width: 36, height: 36 }} aria-label="Notifications">
-            <Bell size={18} className="text-slate-600" />
-            {notifications > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: "#EF4444" }} />}
-          </button>
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={toggleNotifications}
+              className="relative flex items-center justify-center rounded-md transition-colors hover:bg-slate-50"
+              style={{ width: 36, height: 36 }}
+              aria-label="Notifications"
+            >
+              <Bell size={18} className="text-slate-600" />
+              {notifications > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: "#EF4444" }} />}
+            </button>
+            {notifOpen && <NotificationsPanel activities={activities} onClose={() => setNotifOpen(false)} />}
+          </div>
 
           <button className="flex items-center justify-center rounded-md transition-colors hover:bg-slate-50" style={{ width: 36, height: 36 }} aria-label="Help">
             <HelpCircle size={18} className="text-slate-600" />
