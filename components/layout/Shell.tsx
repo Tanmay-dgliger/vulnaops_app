@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard, Shield, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
-  ScrollText, Settings, Search, Bell, HelpCircle, ChevronRight, LogOut,
+  ScrollText, Settings, Bell, HelpCircle, ChevronRight, LogOut,
 } from "lucide-react";
 import type { Activity } from "@/types/activity";
 import { useData } from "@/lib/state/DataContext";
@@ -219,8 +219,6 @@ export default function Shell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [notifications, setNotifications] = useState(7);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const notifRef = useRef<HTMLDivElement>(null);
   const { vulnerabilities, activities } = useData();
   const { logout } = useAuth();
@@ -233,12 +231,6 @@ export default function Shell({ children }: { children: ReactNode }) {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [notifOpen]);
-
-  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return;
-    const q = searchQuery.trim();
-    router.push(q ? `/vulnerabilities?q=${encodeURIComponent(q)}` : "/vulnerabilities");
-  };
 
   const toggleNotifications = () => {
     setNotifOpen((open) => !open);
@@ -294,23 +286,6 @@ export default function Shell({ children }: { children: ReactNode }) {
 
           <div className="flex-1" />
 
-          <div
-            className="flex items-center gap-2 rounded-md px-3 transition-all"
-            style={{ height: 36, width: searchFocused ? 260 : 200, background: "#F8FAFC", border: `1px solid ${searchFocused ? "#93C5FD" : "#E2E8F0"}`, transition: "all 0.2s" }}
-          >
-            <Search size={14} className="text-slate-400 shrink-0" />
-            <input
-              className="bg-transparent text-sm outline-none text-slate-700 placeholder-slate-400 flex-1 min-w-0"
-              placeholder="Search vulnerabilities..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchSubmit}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-            />
-            <kbd className="text-[10px] text-slate-400 bg-white border border-slate-200 rounded px-1 font-mono shrink-0">⌘K</kbd>
-          </div>
-
           <div className="relative" ref={notifRef}>
             <button
               onClick={toggleNotifications}
@@ -334,7 +309,7 @@ export default function Shell({ children }: { children: ReactNode }) {
 
           <div className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold" style={{ background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0" }}>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-            Production
+            UAT
           </div>
         </header>
 

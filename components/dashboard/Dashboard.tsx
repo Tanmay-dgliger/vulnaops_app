@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -24,15 +24,61 @@ interface KPICard {
   href: string;
 }
 
-function SelectButton({ label, small }: { label: string; small?: boolean }) {
+function SelectButton({
+  label,
+  options,
+  value,
+  onChange,
+  small,
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+  small?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const current = options.find((o) => o.value === value)?.label ?? label;
+
   return (
-    <button
-      className="flex items-center gap-1.5 rounded-md transition-colors hover:bg-slate-50"
-      style={{ padding: small ? "4px 10px" : "7px 12px", background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#334155", fontSize: small ? 11 : 13, fontWeight: 500 }}
-    >
-      {label}
-      <ChevronDown size={small ? 12 : 14} className="text-slate-400" />
-    </button>
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 rounded-md transition-colors hover:bg-slate-50"
+        style={{ padding: small ? "4px 10px" : "7px 12px", background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#334155", fontSize: small ? 11 : 13, fontWeight: 500 }}
+      >
+        {current}
+        <ChevronDown size={small ? 12 : 14} className="text-slate-400" />
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-1.5 z-50 rounded-lg shadow-lg overflow-hidden"
+          style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", minWidth: 180 }}
+        >
+          {options.map((o) => (
+            <button
+              key={o.value}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className="flex items-center w-full text-left px-3 py-2 text-xs transition-colors hover:bg-slate-50"
+              style={{ color: o.value === value ? "#2563EB" : "#334155", fontWeight: o.value === value ? 600 : 500 }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -85,17 +131,47 @@ const DonutTooltip = ({ active, payload }: any) => {
   );
 };
 
+const TIME_RANGE_OPTIONS = [
+  { value: "7", label: "Last 7 Days" },
+  { value: "30", label: "Last 30 Days" },
+  { value: "90", label: "Last 90 Days" },
+  { value: "all", label: "All Time" },
+];
+
 export default function Dashboard() {
   const { vulnerabilities, assets } = useData();
   const [trendView, setTrendView] = useState<"all" | "critical">("all");
+  const [timeRange, setTimeRange] = useState("30");
+  const [businessUnit, setBusinessUnit] = useState("all");
 
-  const metrics = useMemo(() => getDashboardMetrics(vulnerabilities), [vulnerabilities]);
-  const trendData = useMemo(() => getVulnerabilityTrend(vulnerabilities), [vulnerabilities]);
-  const severityData = useMemo(() => getSeverityDistribution(vulnerabilities), [vulnerabilities]);
-  const lifecycle = useMemo(() => getLifecycleStages(vulnerabilities), [vulnerabilities]);
-  const topAssets = useMemo(() => getTopAssets(vulnerabilities, assets, 5), [vulnerabilities, assets]);
-  const topCVEs = useMemo(() => getTopCVEs(vulnerabilities, 5), [vulnerabilities]);
-  const sla = useMemo(() => getSlaCompliance(vulnerabilities), [vulnerabilities]);
+  const buOptions = useMemo(() => {
+    const units = Array.from(new Set(assets.map((a) => a.businessUnit))).sort();
+    return [{ value: "all", label: "All Business Units" }, ...units.map((u) => ({ value: u, label: u }))];
+  }, [assets]);
+
+  const assetBuMap = useMemo(() => new Map(assets.map((a) => [a.id, a.businessUnit])), [assets]);
+
+  const filteredAssets = useMemo(
+    () => (businessUnit === "all" ? assets : assets.filter((a) => a.businessUnit === businessUnit)),
+    [assets, businessUnit]
+  );
+
+  const filteredVulnerabilities = useMemo(() => {
+    const cutoff = timeRange === "all" ? null : Date.now() - Number(timeRange) * 24 * 60 * 60 * 1000;
+    return vulnerabilities.filter((v) => {
+      if (businessUnit !== "all" && assetBuMap.get(v.assetId) !== businessUnit) return false;
+      if (cutoff !== null && new Date(v.firstSeen).getTime() < cutoff) return false;
+      return true;
+    });
+  }, [vulnerabilities, businessUnit, assetBuMap, timeRange]);
+
+  const metrics = useMemo(() => getDashboardMetrics(filteredVulnerabilities), [filteredVulnerabilities]);
+  const trendData = useMemo(() => getVulnerabilityTrend(filteredVulnerabilities), [filteredVulnerabilities]);
+  const severityData = useMemo(() => getSeverityDistribution(filteredVulnerabilities), [filteredVulnerabilities]);
+  const lifecycle = useMemo(() => getLifecycleStages(filteredVulnerabilities), [filteredVulnerabilities]);
+  const topAssets = useMemo(() => getTopAssets(filteredVulnerabilities, filteredAssets, 5), [filteredVulnerabilities, filteredAssets]);
+  const topCVEs = useMemo(() => getTopCVEs(filteredVulnerabilities, 5), [filteredVulnerabilities]);
+  const sla = useMemo(() => getSlaCompliance(filteredVulnerabilities), [filteredVulnerabilities]);
 
   const total = severityData.reduce((a, d) => a + d.value, 0) || 1;
   const compliancePct = sla.compliancePct / 100;
@@ -120,8 +196,8 @@ export default function Dashboard() {
           <p className="text-sm text-slate-500 mt-0.5">Enterprise security posture and remediation performance</p>
         </div>
         <div className="flex items-center gap-2">
-          <SelectButton label="Last 30 Days" />
-          <SelectButton label="All Business Units" />
+          <SelectButton label="Last 30 Days" options={TIME_RANGE_OPTIONS} value={timeRange} onChange={setTimeRange} />
+          <SelectButton label="All Business Units" options={buOptions} value={businessUnit} onChange={setBusinessUnit} />
           <Link href="/reports" className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors" style={{ background: "#2563EB", color: "#FFFFFF", border: "1px solid #2563EB" }}>
             <Download size={14} />
             Export Report

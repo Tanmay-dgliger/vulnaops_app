@@ -126,6 +126,21 @@ export default function RemediationBoard() {
         </div>
       </div>
 
+      <div className="grid grid-cols-5 gap-3">
+        {COLUMNS.map((col) => {
+          const cc = COL_CFG[col];
+          const colCards = filtered.filter((c) => c.status === col);
+          const breached = colCards.filter((c) => c.slaBreached).length;
+          return (
+            <div key={col} className="rounded-lg p-3 text-center" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+              <div className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: cc.accent }}>{col}</div>
+              <div className="text-2xl font-bold text-slate-900 font-heading">{colCards.length}</div>
+              {breached > 0 && <div className="text-[10px] font-semibold text-red-500 mt-0.5">{breached} breached</div>}
+            </div>
+          );
+        })}
+      </div>
+
       {view === "board" ? (
         <div className="flex gap-4 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 320px)" }}>
           {COLUMNS.map((col) => {
@@ -166,21 +181,6 @@ export default function RemediationBoard() {
           </table>
         </div>
       )}
-
-      <div className="grid grid-cols-5 gap-3">
-        {COLUMNS.map((col) => {
-          const cc = COL_CFG[col];
-          const colCards = filtered.filter((c) => c.status === col);
-          const breached = colCards.filter((c) => c.slaBreached).length;
-          return (
-            <div key={col} className="rounded-lg p-3 text-center" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
-              <div className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: cc.accent }}>{col}</div>
-              <div className="text-2xl font-bold text-slate-900 font-heading">{colCards.length}</div>
-              {breached > 0 && <div className="text-[10px] font-semibold text-red-500 mt-0.5">{breached} breached</div>}
-            </div>
-          );
-        })}
-      </div>
       <div className="h-4" />
     </div>
   );
