@@ -1,0 +1,19 @@
+findingId,findingType,packageName,packageVersion,ecosystem,vulnerableVersion,fixedVersion,cve,title,severity,cvss,applicationId,repository,branch,firstSeen,lastSeen,status,owner,dueDate,riskScore,license,isDirectDependency,isTransitiveDependency
+SCA-1001,SCA,log4j-core,2.14.1,Maven,< 2.17.1,2.17.1,CVE-2021-44228,Remote Code Execution via JNDI Lookup (Log4Shell),Critical,10.0,APP-01,payments-api,main,2026-08-02,2026-09-09,Remediating,Rahul Sharma,2026-08-09,98,Apache-2.0,false,true
+SCA-1002,SCA,lodash,4.17.15,npm,< 4.17.21,4.17.21,CVE-2021-23337,Command Injection via Template Function,High,7.2,APP-02,crm-platform,develop,2026-08-21,2026-09-07,Triaged,Amit Kumar,2026-09-05,49,MIT,true,false
+SCA-1003,SCA,requests,2.19.0,PyPI,< 2.31.0,2.31.0,CVE-2023-32681,Proxy-Authorization Header Leak,Medium,6.1,APP-14,fraud-detection-engine,main,2026-09-02,2026-09-08,New,,2026-10-02,45,Apache-2.0,true,false
+SCA-1004,SCA,jackson-databind,2.9.8,Maven,< 2.9.9,2.9.9,CVE-2019-12384,Deserialization RCE via Polymorphic Typing,Critical,9.8,APP-15,loan-origination-system,release/2026.09,2026-08-10,2026-09-06,Assigned,Priya Nair,2026-08-17,86,Apache-2.0,false,true
+SCA-1005,SCA,spring-core,5.2.9,Maven,< 5.3.18,5.3.18,CVE-2022-22965,Spring4Shell Remote Code Execution,Critical,9.8,APP-16,treasury-management,main,2026-08-04,2026-09-09,Remediating,Priyanka Desai,2026-08-11,96,Apache-2.0,true,false
+SCA-1006,SCA,axios,0.21.0,npm,< 0.21.2,0.21.2,CVE-2021-3749,ReDoS in Trim Function,Medium,5.3,APP-22,mobile-banking-app,main,2026-06-12,2026-07-28,Closed,Neha Gupta,2026-07-12,40,MIT,false,true
+SCA-1007,SCA,minimist,1.2.0,npm,< 1.2.3,1.2.3,CVE-2020-7598,Prototype Pollution via Argument Parsing,High,7.5,APP-20,notification-service,main,2026-08-16,2026-09-05,Triaged,Vikram Patel,2026-08-31,43,MIT,false,true
+SCA-1008,SCA,pyyaml,5.1,PyPI,< 5.4,5.4,CVE-2020-14343,Arbitrary Code Execution via full_load,Critical,9.8,APP-09,batch-processing-jobs,main,2026-06-25,2026-08-15,Validation,Deepika Rao,2026-07-02,69,MIT,true,false
+SCA-1009,SCA,django,2.2.9,PyPI,< 2.2.11,2.2.11,CVE-2020-9402,SQL Injection in GIS Functions,High,8.1,APP-23,analytics-data-warehouse,develop,2026-08-12,2026-09-04,Assigned,Deepika Rao,2026-08-27,52,BSD-3-Clause,true,false
+SCA-1010,SCA,commons-collections,3.2.1,Maven,< 3.2.2,3.2.2,CVE-2015-6420,Deserialization Remote Code Execution,Critical,9.8,APP-24,identity-provider,main,2026-09-05,2026-09-09,New,,2026-09-12,96,Apache-2.0,false,true
+SCA-1011,SCA,Newtonsoft.Json,9.0.1,NuGet,< 13.0.1,13.0.1,CVE-2024-21907,Denial of Service via Deeply Nested JSON,Medium,5.9,APP-17,hr-portal,main,2026-06-01,2026-08-10,Accepted Risk,Rajiv Sinha,2026-07-01,27,MIT,true,false
+SCA-1012,SCA,actionpack,5.2.1,RubyGems,< 5.2.2.1,5.2.2.1,CVE-2019-5418,File Content Disclosure via Accept-Language Header,High,7.5,APP-18,vendor-management-portal,main,2026-08-23,2026-09-06,Triaged,Rajiv Sinha,2026-09-07,46,MIT,true,false
+SCA-1013,SCA,urllib3,1.24.1,PyPI,< 1.26.5,1.26.5,CVE-2021-33503,ReDoS via Crafted Authority Component,Medium,5.3,APP-19,document-management-system,main,2026-07-20,2026-09-03,Potential False Positive,Neha Gupta,2026-08-19,21,MIT,false,true
+SCA-1014,SCA,junit,4.12,Maven,< 4.13.1,4.13.1,CVE-2020-15250,Local Information Disclosure via Temp Files,Low,3.3,APP-13,dev-sandbox,main,2026-05-10,2026-06-01,Closed,Amit Kumar,2026-07-09,1,EPL-1.0,true,false
+SCA-1015,SCA,express,4.16.0,npm,< 4.19.2,4.19.2,CVE-2024-29041,Open Redirect via Malformed URL,Medium,6.1,APP-21,api-gateway-platform,develop,2026-08-27,2026-09-08,Assigned,Vikram Patel,2026-09-26,41,MIT,true,false
+SCA-1016,SCA,protobuf-java,3.6.0,Maven,< 3.21.7,3.21.7,CVE-2022-3171,Denial of Service via Crafted Protobuf Message,High,7.5,APP-06,esb-integration-layer,main,2026-08-18,2026-09-07,Remediating,Manish Tiwari,2026-09-02,52,"BSD-3-Clause
+""
+",false,true

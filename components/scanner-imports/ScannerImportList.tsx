@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FileText, ChevronRight, CheckCircle2, RefreshCw, X, Clock } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import { formatDate } from "@/lib/business/format";
+import { getFindingTypeForScanner } from "@/lib/business/scanner";
+import { FindingTypeBadge } from "@/components/common/badges";
 import ImportProcessingOverlay from "./ImportProcessingOverlay";
 
 const SCANNER_COLOR: Record<string, { bg: string; text: string; border: string }> = {
@@ -12,7 +14,13 @@ const SCANNER_COLOR: Record<string, { bg: string; text: string; border: string }
   Nessus: { bg: "#F5F3FF", text: "#7C3AED", border: "#DDD6FE" },
   Rapid7: { bg: "#F0FDF4", text: "#15803D", border: "#BBF7D0" },
   Tenable: { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
+  SonarQube: { bg: "#F5F3FF", text: "#6D28D9", border: "#DDD6FE" },
+  "OWASP ZAP": { bg: "#FFF7ED", text: "#9A3412", border: "#FED7AA" },
+  Snyk: { bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
+  Mend: { bg: "#F0FDF4", text: "#15803D", border: "#BBF7D0" },
+  "OWASP Dependency-Check": { bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
 };
+const SCANNERS = ["Qualys", "Nessus", "Tenable", "Rapid7", "SonarQube", "OWASP ZAP", "Snyk", "Mend", "OWASP Dependency-Check"];
 const STATUS_CFG: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
   Processed: { bg: "#F0FDF4", text: "#16A34A", icon: <CheckCircle2 size={12} /> },
   Processing: { bg: "#EFF6FF", text: "#2563EB", icon: <RefreshCw size={12} className="animate-spin" /> },
@@ -24,17 +32,35 @@ export default function ScannerImportList() {
   const router = useRouter();
   const { scannerImports, importScan } = useData();
   const [showUpload, setShowUpload] = useState(false);
-  const [processing, setProcessing] = useState<{ scanner: string; file: string } | null>(null);
+  const [processing, setProcessing] = useState<{ scanner: string; file: string; recordCount?: number } | null>(null);
+  const [pendingScanner, setPendingScanner] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startImport = (scanner: string) => {
-    const file = `${scanner.toLowerCase()}_0910.xlsx`;
+    setPendingScanner(scanner);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const file = e.target.files?.[0];
+    const scanner = pendingScanner;
+    e.target.value = "";
+    if (!file || !scanner) return;
+
+    let recordCount: number | undefined;
+    if (file.name.toLowerCase().endsWith(".csv")) {
+      const text = await file.text();
+      recordCount = text.split(/\r?\n/).filter((line, i) => i > 0 && line.trim().length > 0).length;
+    }
+
     setShowUpload(false);
-    setProcessing({ scanner, file });
+    setPendingScanner(null);
+    setProcessing({ scanner, file: file.name, recordCount });
   };
 
   const finishImport = () => {
     if (!processing) return;
-    const record = importScan(processing.scanner, processing.file);
+    const record = importScan(processing.scanner, processing.file, processing.recordCount);
     setProcessing(null);
     router.push(`/scanner-imports/${record.id}`);
   };
@@ -58,14 +84,16 @@ export default function ScannerImportList() {
       {showUpload && (
         <div className="rounded-xl border-2 border-dashed p-8 text-center transition-all" style={{ borderColor: "#BFDBFE", background: "#F8FAFC" }}>
           <div className="flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3" style={{ background: "#EFF6FF" }}><Upload size={22} className="text-blue-500" /></div>
-          <h3 className="text-sm font-semibold text-slate-800 mb-1">Select scanner to simulate import</h3>
-          <p className="text-xs text-slate-400 mb-3">Supports Qualys, Nessus, Tenable, and Rapid7 exports (.xlsx, .csv, .xml)</p>
+          <h3 className="text-sm font-semibold text-slate-800 mb-1">Select scanner, then choose a file to upload</h3>
+          <p className="text-xs text-slate-400 mb-3">Supports Qualys, Nessus, Tenable, Rapid7 (VAPT), SonarQube (SAST), OWASP ZAP (DAST), and Snyk, Mend, OWASP Dependency-Check (SCA) exports (.xlsx, .csv, .xml, .json) — demo data only, not live integrations</p>
+          <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xml,.json" className="hidden" onChange={handleFileSelected} />
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {["Qualys", "Nessus", "Tenable", "Rapid7"].map((s) => {
+            {SCANNERS.map((s) => {
               const sc = SCANNER_COLOR[s];
               return (
                 <button key={s} onClick={() => startImport(s)} className="flex items-center gap-1.5 cursor-pointer rounded-md px-3 py-1.5 text-xs font-semibold transition-all hover:opacity-80" style={{ background: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>
                   <FileText size={12} /> {s}
+                  <span className="text-[9px] font-bold opacity-60">{getFindingTypeForScanner(s)}</span>
                 </button>
               );
             })}
@@ -90,7 +118,7 @@ export default function ScannerImportList() {
       <div className="rounded-xl border overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
         <div className="px-5 py-3.5 border-b" style={{ borderColor: "#F1F5F9", background: "#FAFBFC" }}><h3 className="text-sm font-semibold text-slate-900">Recent Imports</h3></div>
         <table className="w-full text-sm">
-          <thead><tr style={{ borderBottom: "2px solid #F1F5F9", background: "#FAFBFC" }}>{["Scanner", "File", "Records", "New", "Duplicates", "Updated", "Invalid", "Date", "Status", ""].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">{h}</th>)}</tr></thead>
+          <thead><tr style={{ borderBottom: "2px solid #F1F5F9", background: "#FAFBFC" }}>{["Scanner", "Type", "File", "Records", "New", "Duplicates", "Updated", "Invalid", "Date", "Status", ""].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">{h}</th>)}</tr></thead>
           <tbody>
             {scannerImports.map((imp, i) => {
               const sc = SCANNER_COLOR[imp.scanner] ?? { bg: "#F8FAFC", text: "#64748B", border: "#E2E8F0" };
@@ -98,6 +126,7 @@ export default function ScannerImportList() {
               return (
                 <tr key={imp.id} className="cursor-pointer transition-colors hover:bg-slate-50" style={{ borderBottom: i < scannerImports.length - 1 ? "1px solid #F8FAFC" : "none" }} onClick={() => router.push(`/scanner-imports/${imp.id}`)}>
                   <td className="px-4 py-3"><span className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold" style={{ background: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>{imp.scanner}</span></td>
+                  <td className="px-4 py-3"><FindingTypeBadge type={imp.findingType} /></td>
                   <td className="px-4 py-3"><span className="font-mono text-xs text-slate-700">{imp.file}</span></td>
                   <td className="px-4 py-3 text-xs font-semibold text-slate-900 tabular-nums">{imp.records.toLocaleString()}</td>
                   <td className="px-4 py-3"><span className="text-xs font-semibold tabular-nums text-blue-700">{imp.newFindings.toLocaleString()}</span></td>

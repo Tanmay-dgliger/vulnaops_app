@@ -1,6 +1,7 @@
 import raw from "@/data/csv/scanner-imports.csv";
 import { parseCsv, toNum } from "./parse";
 import type { ImportStatus, ScannerImport } from "@/types/scanner-import";
+import type { FindingType } from "@/types/vulnerability";
 
 export function getScannerImports(): ScannerImport[] {
   const rows = parseCsv<Record<string, string>>(raw);
@@ -16,5 +17,6 @@ export function getScannerImports(): ScannerImport[] {
     date: r.date,
     status: r.status as ImportStatus,
     duration: r.duration,
+    findingType: r.findingType as FindingType,
   }));
 }

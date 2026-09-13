@@ -1,6 +1,25 @@
-import type { VulnerabilitySeverity, VulnerabilityStatus, Environment } from "@/types/vulnerability";
+import type { VulnerabilitySeverity, VulnerabilityStatus, Environment, FindingType } from "@/types/vulnerability";
 import type { SlaState } from "@/lib/business/sla";
 import { initials, ownerColor } from "@/lib/business/format";
+
+export const FINDING_TYPE_CFG: Record<FindingType, { bg: string; text: string; border: string }> = {
+  VAPT: { bg: "#EFF6FF", text: "#1D4ED8", border: "#BFDBFE" },
+  SAST: { bg: "#F5F3FF", text: "#7C3AED", border: "#DDD6FE" },
+  DAST: { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
+  SCA: { bg: "#F0FDF4", text: "#15803D", border: "#BBF7D0" },
+};
+
+export function FindingTypeBadge({ type }: { type: FindingType }) {
+  const c = FINDING_TYPE_CFG[type];
+  return (
+    <span
+      className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide whitespace-nowrap"
+      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+    >
+      {type}
+    </span>
+  );
+}
 
 export const SEVERITY_CFG: Record<VulnerabilitySeverity, { bg: string; text: string; border: string; dot: string }> = {
   Critical: { bg: "#FEF2F2", text: "#DC2626", border: "#FECACA", dot: "#DC2626" },

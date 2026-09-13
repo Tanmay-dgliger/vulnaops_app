@@ -8,10 +8,10 @@ import {
 import { TrendingDown, TrendingUp, ChevronDown, Download, ArrowRight } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import {
-  getDashboardMetrics, getVulnerabilityTrend, getSeverityDistribution, getTopAssets, getTopCVEs, getSlaCompliance,
+  getDashboardMetrics, getVulnerabilityTrend, getSeverityDistribution, getTopAssets, getTopCVEs, getSlaCompliance, getFindingTypeDistribution,
 } from "@/lib/business/metrics";
 import { getLifecycleStages } from "@/lib/business/lifecycle";
-import { SeverityBadge, SlaBadge, StatusBadge } from "@/components/common/badges";
+import { SeverityBadge, SlaBadge, StatusBadge, FINDING_TYPE_CFG } from "@/components/common/badges";
 import { calculateAge, calculateSlaStatus } from "@/lib/business/sla";
 
 interface KPICard {
@@ -138,11 +138,20 @@ const TIME_RANGE_OPTIONS = [
   { value: "all", label: "All Time" },
 ];
 
+const FINDING_TYPE_OPTIONS = [
+  { value: "all", label: "All Types" },
+  { value: "VAPT", label: "VAPT" },
+  { value: "SAST", label: "SAST" },
+  { value: "DAST", label: "DAST" },
+  { value: "SCA", label: "SCA" },
+];
+
 export default function Dashboard() {
   const { vulnerabilities, assets } = useData();
   const [trendView, setTrendView] = useState<"all" | "critical">("all");
   const [timeRange, setTimeRange] = useState("30");
   const [businessUnit, setBusinessUnit] = useState("all");
+  const [findingType, setFindingType] = useState("all");
 
   const buOptions = useMemo(() => {
     const units = Array.from(new Set(assets.map((a) => a.businessUnit))).sort();
@@ -160,10 +169,11 @@ export default function Dashboard() {
     const cutoff = timeRange === "all" ? null : Date.now() - Number(timeRange) * 24 * 60 * 60 * 1000;
     return vulnerabilities.filter((v) => {
       if (businessUnit !== "all" && assetBuMap.get(v.assetId) !== businessUnit) return false;
+      if (findingType !== "all" && v.findingType !== findingType) return false;
       if (cutoff !== null && new Date(v.firstSeen).getTime() < cutoff) return false;
       return true;
     });
-  }, [vulnerabilities, businessUnit, assetBuMap, timeRange]);
+  }, [vulnerabilities, businessUnit, assetBuMap, timeRange, findingType]);
 
   const metrics = useMemo(() => getDashboardMetrics(filteredVulnerabilities), [filteredVulnerabilities]);
   const trendData = useMemo(() => getVulnerabilityTrend(filteredVulnerabilities), [filteredVulnerabilities]);
@@ -172,6 +182,8 @@ export default function Dashboard() {
   const topAssets = useMemo(() => getTopAssets(filteredVulnerabilities, filteredAssets, 5), [filteredVulnerabilities, filteredAssets]);
   const topCVEs = useMemo(() => getTopCVEs(filteredVulnerabilities, 5), [filteredVulnerabilities]);
   const sla = useMemo(() => getSlaCompliance(filteredVulnerabilities), [filteredVulnerabilities]);
+  const findingTypeData = useMemo(() => getFindingTypeDistribution(filteredVulnerabilities), [filteredVulnerabilities]);
+  const findingTypeTotal = findingTypeData.reduce((a, d) => a + d.value, 0) || 1;
 
   const total = severityData.reduce((a, d) => a + d.value, 0) || 1;
   const compliancePct = sla.compliancePct / 100;
@@ -198,6 +210,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           <SelectButton label="Last 30 Days" options={TIME_RANGE_OPTIONS} value={timeRange} onChange={setTimeRange} />
           <SelectButton label="All Business Units" options={buOptions} value={businessUnit} onChange={setBusinessUnit} />
+          <SelectButton label="All Types" options={FINDING_TYPE_OPTIONS} value={findingType} onChange={setFindingType} />
           <Link href="/reports" className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors" style={{ background: "#2563EB", color: "#FFFFFF", border: "1px solid #2563EB" }}>
             <Download size={14} />
             Export Report
@@ -312,6 +325,30 @@ export default function Dashboard() {
               {i < lifecycle.length - 1 && <div className="shrink-0 mx-1"><ArrowRight size={14} className="text-slate-300" /></div>}
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-slate-900">Finding Types</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Source distribution — click a type to view its findings</p>
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          {findingTypeData.map((d) => {
+            const c = FINDING_TYPE_CFG[d.name];
+            return (
+              <Link
+                key={d.name}
+                href={`/vulnerabilities?findingType=${d.name}`}
+                className="rounded-lg p-4 text-center transition-all hover:shadow-sm block"
+                style={{ background: c.bg, border: `1px solid ${c.border}` }}
+              >
+                <div className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: c.text }}>{d.name}</div>
+                <div className="text-2xl font-bold text-slate-900 font-heading">{d.value.toLocaleString()}</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">{Math.round((d.value / findingTypeTotal) * 100)}% of findings</div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 

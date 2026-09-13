@@ -12,6 +12,8 @@ export default async function VulnerabilitiesPage({ searchParams }: PageProps) {
   const status = asString(params.status);
   const sla = asString(params.sla);
   const search = asString(params.q);
+  const findingType = asString(params.findingType);
+  const applicationId = asString(params.applicationId);
 
   return (
     // Force a remount whenever the URL's filter query changes: VulnerabilityQueue seeds
@@ -20,11 +22,13 @@ export default async function VulnerabilitiesPage({ searchParams }: PageProps) {
     // URLs (e.g. "All Vulnerabilities" -> "New / Untriaged") reuses the existing component
     // instance and the new initial* props are silently ignored, leaving the stale filter.
     <VulnerabilityQueue
-      key={`${severity ?? ""}|${status ?? ""}|${sla ?? ""}|${search ?? ""}`}
+      key={`${severity ?? ""}|${status ?? ""}|${sla ?? ""}|${search ?? ""}|${findingType ?? ""}|${applicationId ?? ""}`}
       initialSeverity={severity}
       initialStatus={status}
       initialSla={sla}
       initialSearch={search}
+      initialFindingType={findingType}
+      initialApplicationId={applicationId}
     />
   );
 }

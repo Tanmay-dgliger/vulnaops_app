@@ -1,3 +1,5 @@
+import type { FindingType } from "./vulnerability";
+
 export type ImportStatus = "Processed" | "Processing" | "Failed" | "Queued";
 
 export interface ScannerImport {
@@ -12,4 +14,5 @@ export interface ScannerImport {
   date: string;
   status: ImportStatus;
   duration: string;
+  findingType: FindingType;
 }

@@ -6,7 +6,7 @@ import { LayoutGrid, List, Plus, User, Building2, AlertCircle, Clock } from "luc
 import { useData } from "@/lib/state/DataContext";
 import type { RemediationStatus } from "@/types/remediation";
 import type { Vulnerability } from "@/types/vulnerability";
-import { OwnerAvatar, SEVERITY_CFG } from "@/components/common/badges";
+import { OwnerAvatar, SEVERITY_CFG, FindingTypeBadge } from "@/components/common/badges";
 import { calculateSlaStatus } from "@/lib/business/sla";
 import { initials, ownerColor } from "@/lib/business/format";
 
@@ -55,6 +55,7 @@ function KanbanCard({ card, onOpen }: { card: BoardCard; onOpen: () => void }) {
           </span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
+          <FindingTypeBadge type={card.vuln.findingType} />
           <span className="font-mono text-[10px] font-semibold text-slate-700 rounded px-1.5 py-0.5" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>{card.vuln.assetId}</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -81,6 +82,7 @@ export default function RemediationBoard() {
   const router = useRouter();
   const { remediations, vulnerabilities } = useData();
   const [filterSev, setFilterSev] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
   const [view, setView] = useState<"board" | "list">("board");
 
   const vulnById = useMemo(() => new Map(vulnerabilities.map((v) => [v.id, v])), [vulnerabilities]);
@@ -98,7 +100,7 @@ export default function RemediationBoard() {
     [remediations, vulnById]
   );
 
-  const filtered = cards.filter((c) => filterSev === "all" || c.vuln.severity === filterSev);
+  const filtered = cards.filter((c) => (filterSev === "all" || c.vuln.severity === filterSev) && (filterType === "all" || c.vuln.findingType === filterType));
 
   return (
     <div className="p-6 space-y-4 max-w-[1360px] mx-auto">
@@ -114,6 +116,13 @@ export default function RemediationBoard() {
           {(["all", "Critical", "High", "Medium", "Low"] as const).map((sev) => (
             <button key={sev} onClick={() => setFilterSev(sev)} className="rounded-md px-2.5 py-1 text-xs font-medium transition-all" style={{ background: filterSev === sev ? "#FFFFFF" : "transparent", color: filterSev === sev ? "#0F172A" : "#64748B", boxShadow: filterSev === sev ? "0 1px 3px rgba(0,0,0,0.08)" : "none" }}>
               {sev === "all" ? "All" : sev}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5 rounded-lg p-1" style={{ background: "#F1F5F9" }}>
+          {(["all", "VAPT", "SAST", "DAST", "SCA"] as const).map((t) => (
+            <button key={t} onClick={() => setFilterType(t)} className="rounded-md px-2.5 py-1 text-xs font-medium transition-all" style={{ background: filterType === t ? "#FFFFFF" : "transparent", color: filterType === t ? "#0F172A" : "#64748B", boxShadow: filterType === t ? "0 1px 3px rgba(0,0,0,0.08)" : "none" }}>
+              {t === "all" ? "All Types" : t}
             </button>
           ))}
         </div>
@@ -164,11 +173,12 @@ export default function RemediationBoard() {
       ) : (
         <div className="rounded-xl border overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
           <table className="w-full text-sm">
-            <thead><tr style={{ borderBottom: "2px solid #F1F5F9", background: "#FAFBFC" }}>{["CVE", "Asset", "Owner", "Status", "Progress", "SLA", "Risk"].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">{h}</th>)}</tr></thead>
+            <thead><tr style={{ borderBottom: "2px solid #F1F5F9", background: "#FAFBFC" }}>{["CVE", "Type", "Asset", "Owner", "Status", "Progress", "SLA", "Risk"].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">{h}</th>)}</tr></thead>
             <tbody>
               {filtered.map((c, i) => (
                 <tr key={c.remId} className="hover:bg-slate-50 cursor-pointer" style={{ borderBottom: i < filtered.length - 1 ? "1px solid #F1F5F9" : "none" }} onClick={() => router.push(`/remediation/${c.remId}`)}>
                   <td className="px-4 py-3 font-mono text-xs font-semibold text-blue-700">{c.vuln.cve}</td>
+                  <td className="px-4 py-3"><FindingTypeBadge type={c.vuln.findingType} /></td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-700">{c.vuln.assetId}</td>
                   <td className="px-4 py-3"><OwnerAvatar name={c.owner} /></td>
                   <td className="px-4 py-3"><span className="text-xs font-medium" style={{ color: COL_CFG[c.status].accent }}>{c.status}</span></td>

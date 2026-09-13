@@ -12,6 +12,7 @@ import type { BusinessCriticality, DataSensitivity } from "@/types/vulnerability
 import type { TriageDisposition } from "@/lib/state/DataContext";
 import { findDuplicates } from "@/lib/business/duplicates";
 import { calculateRiskScore } from "@/lib/business/risk-score";
+import { FindingTypeBadge } from "@/components/common/badges";
 
 type FpAssessment = "none" | "potential" | "confirmed";
 type YesNo = "yes" | "no";
@@ -167,19 +168,48 @@ export default function TriageWorkspace({ id }: { id: string }) {
           <SectionPanel title="Finding Details" icon={<AlertCircle size={15} />} accent={SEVERITY_DOT[vuln.severity]}>
             <div className="flex items-center gap-2 mb-4">
               <span className="font-mono text-base font-bold text-slate-900">{vuln.cve}</span>
+              <FindingTypeBadge type={vuln.findingType} />
               <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold" style={{ background: `${SEVERITY_DOT[vuln.severity]}14`, color: SEVERITY_DOT[vuln.severity], border: `1px solid ${SEVERITY_DOT[vuln.severity]}44` }}>
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: SEVERITY_DOT[vuln.severity] }} /> {vuln.severity}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 mb-4">
-              {[
-                { label: "Asset", value: asset?.name ?? vuln.assetId, mono: true },
-                { label: "CVSS", value: String(vuln.cvss), color: SEVERITY_DOT[vuln.severity] },
-                { label: "Scanner", value: vuln.scanner },
-                { label: "Port", value: String(vuln.port ?? "—"), mono: true },
-                { label: "Protocol", value: vuln.protocol ?? "—" },
-                { label: "Plugin", value: vuln.pluginId, mono: true },
-              ].map((f) => (
+              {(vuln.findingType === "SAST"
+                ? [
+                    { label: "Repository", value: vuln.repository ?? "—", mono: true },
+                    { label: "Branch", value: vuln.branch ?? "—" },
+                    { label: "File", value: vuln.fileName ?? "—", mono: true },
+                    { label: "Line", value: vuln.lineNumber !== undefined ? String(vuln.lineNumber) : "—" },
+                    { label: "CVSS", value: String(vuln.cvss), color: SEVERITY_DOT[vuln.severity] },
+                    { label: "Tool", value: vuln.scanner },
+                  ]
+                : vuln.findingType === "DAST"
+                ? [
+                    { label: "Endpoint", value: vuln.endpoint ?? "—", mono: true },
+                    { label: "Method", value: vuln.httpMethod ?? "—" },
+                    { label: "Parameter", value: vuln.parameter ?? "—", mono: true },
+                    { label: "CVSS", value: String(vuln.cvss), color: SEVERITY_DOT[vuln.severity] },
+                    { label: "Tool", value: vuln.scanner },
+                    { label: "Asset", value: asset?.name ?? vuln.assetId, mono: true },
+                  ]
+                : vuln.findingType === "SCA"
+                ? [
+                    { label: "Package", value: vuln.packageName ?? "—", mono: true },
+                    { label: "Current Version", value: vuln.packageVersion ?? "—" },
+                    { label: "Fixed Version", value: vuln.fixedVersion ?? "—", color: "#16A34A" },
+                    { label: "Ecosystem", value: vuln.ecosystem ?? "—" },
+                    { label: "Dependency", value: vuln.dependencyType ?? "—" },
+                    { label: "Risk", value: `${vuln.riskScore} / 100`, color: SEVERITY_DOT[vuln.severity] },
+                  ]
+                : [
+                    { label: "Asset", value: asset?.name ?? vuln.assetId, mono: true },
+                    { label: "CVSS", value: String(vuln.cvss), color: SEVERITY_DOT[vuln.severity] },
+                    { label: "Scanner", value: vuln.scanner },
+                    { label: "Port", value: String(vuln.port ?? "—"), mono: true },
+                    { label: "Protocol", value: vuln.protocol ?? "—" },
+                    { label: "Plugin", value: vuln.pluginId, mono: true },
+                  ]
+              ).map((f) => (
                 <div key={f.label}>
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">{f.label}</div>
                   <div className={`text-xs font-semibold ${f.mono ? "font-mono" : ""}`} style={{ color: f.color ?? "#0F172A" }}>{f.value}</div>
@@ -203,12 +233,43 @@ export default function TriageWorkspace({ id }: { id: string }) {
           <SectionPanel title="Detection Evidence" icon={<Eye size={15} />} accent="#2563EB">
             <div className="rounded-lg p-3 text-[11px] font-mono text-slate-600 leading-relaxed overflow-x-auto" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
               <div className="text-slate-400 mb-1"># {vuln.scanner} scan output — {vuln.lastSeen}</div>
-              <div><span className="text-blue-600">Plugin:</span> {vuln.pluginId}</div>
-              <div><span className="text-blue-600">Host:</span> {asset?.name} ({asset?.ip})</div>
-              <div><span className="text-blue-600">Port:</span> {vuln.port}/{vuln.protocol}</div>
-              <div><span className="text-red-500">VULN:</span> {vuln.cve} confirmed present</div>
-              <div><span className="text-blue-600">CVSS3:</span> {vuln.cvss}</div>
+              {vuln.findingType === "SAST" ? (
+                <>
+                  <div><span className="text-blue-600">Repository:</span> {vuln.repository}@{vuln.branch}</div>
+                  <div><span className="text-blue-600">Location:</span> {vuln.fileName}{vuln.lineNumber ? `:${vuln.lineNumber}` : ""}</div>
+                  <div><span className="text-red-500">VULN:</span> {vuln.cve} confirmed present</div>
+                  <div><span className="text-blue-600">CVSS3:</span> {vuln.cvss}</div>
+                </>
+              ) : vuln.findingType === "DAST" ? (
+                <>
+                  <div><span className="text-blue-600">Endpoint:</span> {vuln.httpMethod} {vuln.endpoint}</div>
+                  {vuln.parameter && <div><span className="text-blue-600">Parameter:</span> {vuln.parameter}</div>}
+                  <div><span className="text-red-500">VULN:</span> {vuln.cve} confirmed present</div>
+                  <div><span className="text-blue-600">CVSS3:</span> {vuln.cvss}</div>
+                </>
+              ) : vuln.findingType === "SCA" ? (
+                <>
+                  <div><span className="text-blue-600">Package:</span> {vuln.packageName}@{vuln.packageVersion} ({vuln.ecosystem})</div>
+                  {vuln.repository && <div><span className="text-blue-600">Repository:</span> {vuln.repository}@{vuln.branch}</div>}
+                  <div><span className="text-red-500">VULN:</span> {vuln.cve} — vulnerable version {vuln.vulnerableVersion}</div>
+                  <div><span className="text-green-600">Fix:</span> upgrade to {vuln.fixedVersion}</div>
+                </>
+              ) : (
+                <>
+                  <div><span className="text-blue-600">Plugin:</span> {vuln.pluginId}</div>
+                  <div><span className="text-blue-600">Host:</span> {asset?.name} ({asset?.ip})</div>
+                  <div><span className="text-blue-600">Port:</span> {vuln.port}/{vuln.protocol}</div>
+                  <div><span className="text-red-500">VULN:</span> {vuln.cve} confirmed present</div>
+                  <div><span className="text-blue-600">CVSS3:</span> {vuln.cvss}</div>
+                </>
+              )}
             </div>
+            {vuln.findingType === "SAST" && vuln.codeSnippet && (
+              <pre className="rounded-lg p-3 mt-3 text-[11px] font-mono text-slate-600 leading-relaxed overflow-x-auto whitespace-pre-wrap" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>{vuln.codeSnippet}</pre>
+            )}
+            {vuln.findingType === "DAST" && vuln.requestSample && (
+              <pre className="rounded-lg p-3 mt-3 text-[11px] font-mono text-slate-600 leading-relaxed overflow-x-auto whitespace-pre-wrap" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>{vuln.requestSample}</pre>
+            )}
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               {vuln.internetExposed && <div className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium" style={{ background: "#EA580C0D", color: "#EA580C", border: "1px solid #EA580C22" }}><Globe size={11} /> Internet Exposed</div>}
               {vuln.exploitAvailable && <div className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium" style={{ background: "#DC26260D", color: "#DC2626", border: "1px solid #DC262622" }}><Zap size={11} /> Active Exploit</div>}
@@ -307,6 +368,7 @@ export default function TriageWorkspace({ id }: { id: string }) {
               </button>
               {showAudit && (
                 <div className="px-4 py-3" style={{ borderTop: "1px solid #F1F5F9" }}>
+                  <AuditRow label="Finding Type" value={vuln.findingType} />
                   <AuditRow label="CVE" value={vuln.cve} />
                   <AuditRow label="Asset" value={`${asset?.name ?? vuln.assetId} (${vuln.environment})`} />
                   <AuditRow label="Severity" value={`${vuln.severity} — CVSS ${vuln.cvss}`} color={SEVERITY_DOT[vuln.severity]} />

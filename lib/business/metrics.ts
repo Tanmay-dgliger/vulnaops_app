@@ -1,6 +1,6 @@
 import type { Asset } from "@/types/asset";
 import type { Application } from "@/types/application";
-import type { Vulnerability, VulnerabilitySeverity } from "@/types/vulnerability";
+import type { FindingType, Vulnerability, VulnerabilitySeverity } from "@/types/vulnerability";
 import { calculateSlaStatus } from "./sla";
 
 const OPEN_STATUSES = new Set(["New", "Triaged", "Assigned", "Remediating", "Validation", "Potential False Positive"]);
@@ -196,6 +196,20 @@ export function getTopApplications(vulns: Vulnerability[], applications: Applica
     .slice(0, limit);
 }
 
+export interface FindingTypeSlice {
+  name: FindingType;
+  value: number;
+}
+
+const FINDING_TYPE_ORDER: FindingType[] = ["VAPT", "SAST", "DAST", "SCA"];
+
+export function getFindingTypeDistribution(vulns: Vulnerability[]): FindingTypeSlice[] {
+  return FINDING_TYPE_ORDER.map((type) => ({
+    name: type,
+    value: vulns.filter((v) => v.findingType === type).length,
+  }));
+}
+
 export interface SlaComplianceSummary {
   withinSla: number;
   dueSoon: number;
@@ -216,4 +230,71 @@ export function getSlaCompliance(vulns: Vulnerability[]): SlaComplianceSummary {
   }
   const total = open.length || 1;
   return { withinSla, dueSoon, breached, compliancePct: Math.round(((withinSla + dueSoon) / total) * 100) };
+}
+
+export interface TopPackageRow {
+  packageName: string;
+  packageVersion: string;
+  severity: VulnerabilitySeverity;
+  applicationCount: number;
+  cve: string;
+  status: string;
+}
+
+/** SCA-specific rollup: highest-impact vulnerable open-source packages by number of applications affected. */
+export function getTopVulnerablePackages(vulns: Vulnerability[], limit = 10): TopPackageRow[] {
+  const scaVulns = vulns.filter((v) => v.findingType === "SCA" && v.packageName);
+  const byPackage = new Map<string, Vulnerability[]>();
+  for (const v of scaVulns) {
+    const key = `${v.packageName}@${v.packageVersion}`;
+    if (!byPackage.has(key)) byPackage.set(key, []);
+    byPackage.get(key)!.push(v);
+  }
+  const rows: TopPackageRow[] = Array.from(byPackage.values()).map((list) => {
+    const first = list[0];
+    const applicationCount = new Set(list.map((v) => v.applicationId)).size;
+    return {
+      packageName: first.packageName!,
+      packageVersion: first.packageVersion ?? "—",
+      severity: first.severity,
+      applicationCount,
+      cve: first.cve,
+      status: first.status,
+    };
+  });
+  const severityRank: Record<VulnerabilitySeverity, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+  return rows.sort((a, b) => severityRank[b.severity] - severityRank[a.severity] || b.applicationCount - a.applicationCount).slice(0, limit);
+}
+
+export interface DependencyRisk {
+  totalDependencies: number;
+  vulnerableDependencies: number;
+  criticalDependencies: number;
+  highDependencies: number;
+  outdatedDependencies: number;
+}
+
+/**
+ * Demo/illustrative dependency inventory for an application. Vulnerable/critical/high counts are
+ * real (derived from open SCA findings); total/outdated are stable, seeded pseudo-random figures
+ * standing in for a full software-bill-of-materials inventory this demo dataset doesn't model.
+ */
+export function getApplicationDependencyRisk(applicationId: string, vulns: Vulnerability[]): DependencyRisk {
+  const scaVulns = vulns.filter((v) => v.applicationId === applicationId && v.findingType === "SCA");
+  const openSca = scaVulns.filter(isOpen);
+  const criticalDependencies = openSca.filter((v) => v.severity === "Critical").length;
+  const highDependencies = openSca.filter((v) => v.severity === "High").length;
+
+  let hash = 0;
+  for (let i = 0; i < applicationId.length; i++) hash = (hash * 31 + applicationId.charCodeAt(i)) >>> 0;
+  const totalDependencies = 120 + (hash % 380);
+  const outdatedDependencies = Math.min(totalDependencies, Math.round(totalDependencies * (0.08 + (hash % 20) / 100)));
+
+  return {
+    totalDependencies,
+    vulnerableDependencies: openSca.length,
+    criticalDependencies,
+    highDependencies,
+    outdatedDependencies,
+  };
 }

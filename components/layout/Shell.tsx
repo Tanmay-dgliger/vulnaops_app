@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard, Shield, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
-  ScrollText, Settings, Bell, HelpCircle, ChevronRight, LogOut,
+  ScrollText, Settings, Bell, HelpCircle, ChevronRight, LogOut, FileCode2, Globe2, PackageSearch,
 } from "lucide-react";
 import type { Activity } from "@/types/activity";
 import { useData } from "@/lib/state/DataContext";
@@ -32,6 +32,14 @@ const NAV: NavGroup[] = [
     items: [
       { href: "/vulnerabilities", label: "All Vulnerabilities", icon: <Shield size={16} /> },
       { href: "/exceptions", label: "Exceptions", icon: <FileX size={16} /> },
+    ],
+  },
+  {
+    label: "Application Security",
+    items: [
+      { href: "/vulnerabilities?findingType=SAST", label: "SAST Findings", icon: <FileCode2 size={16} /> },
+      { href: "/vulnerabilities?findingType=DAST", label: "DAST Findings", icon: <Globe2 size={16} /> },
+      { href: "/vulnerabilities?findingType=SCA", label: "SCA Findings", icon: <PackageSearch size={16} /> },
     ],
   },
   { label: "Remediation", items: [{ href: "/remediation", label: "Remediation Queue", icon: <ClipboardList size={16} /> }] },

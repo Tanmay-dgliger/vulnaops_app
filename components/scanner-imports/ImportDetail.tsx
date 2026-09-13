@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Database, Layers, GitMerge, Shield, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import { formatDate } from "@/lib/business/format";
+import { FindingTypeBadge } from "@/components/common/badges";
 
 export default function ImportDetail({ id }: { id: string }) {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function ImportDetail({ id }: { id: string }) {
           <div>
             <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
               <span className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold" style={{ background: "#EFF6FF", color: "#1D4ED8", border: "1px solid #BFDBFE" }}>{rec.scanner}</span>
+              <FindingTypeBadge type={rec.findingType} />
               <span className="font-mono text-sm font-semibold text-slate-900">{rec.file}</span>
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "#F0FDF4", color: "#16A34A" }}><CheckCircle2 size={12} /> {rec.status}</span>
             </div>

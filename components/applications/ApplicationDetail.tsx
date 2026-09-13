@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowLeft, AppWindow, Server } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import { SeverityBadge, StatusBadge, CvssBadge } from "@/components/common/badges";
-import { isOpen } from "@/lib/business/metrics";
+import { isOpen, getApplicationDependencyRisk } from "@/lib/business/metrics";
 
 export default function ApplicationDetail({ id }: { id: string }) {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function ApplicationDetail({ id }: { id: string }) {
   const medium = open.filter((v) => v.severity === "Medium").length;
   const low = open.filter((v) => v.severity === "Low").length;
   const riskScore = open.length ? Math.max(...open.map((v) => v.riskScore)) : 0;
+  const depRisk = getApplicationDependencyRisk(app.id, vulnerabilities);
 
   return (
     <div className="p-6 space-y-5 max-w-[1360px] mx-auto">
@@ -51,6 +53,35 @@ export default function ApplicationDetail({ id }: { id: string }) {
               <div className="text-2xl font-bold text-slate-900 font-heading">{s.val}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="rounded-xl border p-5" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-slate-900">Dependency Risk</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Open-source and third-party package exposure (SCA)</p>
+        </div>
+        <div className="grid grid-cols-5 gap-4">
+          <div className="rounded-lg p-3 text-center" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wider mb-1 text-slate-500">Dependencies</div>
+            <div className="text-2xl font-bold text-slate-900 font-heading">{depRisk.totalDependencies}</div>
+          </div>
+          <Link href={`/vulnerabilities?findingType=SCA&applicationId=${app.id}`} className="rounded-lg p-3 text-center block transition-shadow hover:shadow-sm" style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#D97706" }}>Vulnerable</div>
+            <div className="text-2xl font-bold text-slate-900 font-heading">{depRisk.vulnerableDependencies}</div>
+          </Link>
+          <div className="rounded-lg p-3 text-center" style={{ background: "#FEF2F2", border: "1px solid #FECACA" }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#DC2626" }}>Critical</div>
+            <div className="text-2xl font-bold text-slate-900 font-heading">{depRisk.criticalDependencies}</div>
+          </div>
+          <div className="rounded-lg p-3 text-center" style={{ background: "#FFF7ED", border: "1px solid #FED7AA" }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#EA580C" }}>High</div>
+            <div className="text-2xl font-bold text-slate-900 font-heading">{depRisk.highDependencies}</div>
+          </div>
+          <div className="rounded-lg p-3 text-center" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wider mb-1 text-slate-500">Outdated</div>
+            <div className="text-2xl font-bold text-slate-900 font-heading">{depRisk.outdatedDependencies}</div>
+          </div>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import type { Activity, ActionType, EntityType } from "@/types/activity";
 import type { ScannerImport } from "@/types/scanner-import";
 import type { UserAccount } from "@/types/user-account";
 import { calculateRiskScore } from "@/lib/business/risk-score";
+import { getFindingTypeForScanner } from "@/lib/business/scanner";
 import { useToast } from "@/components/common/Toast";
 
 interface DataState extends AppData {}
@@ -58,7 +59,7 @@ interface DataContextValue extends DataState {
   requestRevalidation: (id: string) => void;
   simulateValidation: (id: string) => void;
   addComment: (remediationId: string, text: string, user: string) => void;
-  importScan: (scanner: string, file: string) => ScannerImport;
+  importScan: (scanner: string, file: string, recordCount?: number) => ScannerImport;
   addUserAccount: (input: UserAccount) => boolean;
   updateUserAccount: (originalUsername: string, input: UserAccount) => boolean;
   deleteUserAccount: (username: string) => void;
@@ -421,8 +422,8 @@ export function DataProvider({ initial, children }: { initial: AppData; children
   );
 
   const importScan = useCallback(
-    (scanner: string, file: string): ScannerImport => {
-      const records = 2000 + Math.floor(Math.random() * 3500);
+    (scanner: string, file: string, recordCount?: number): ScannerImport => {
+      const records = recordCount ?? 2000 + Math.floor(Math.random() * 3500);
       const invalid = Math.floor(records * 0.008);
       const duplicates = Math.floor(records * 0.42);
       const newFindings = Math.floor(records * 0.22);
@@ -439,6 +440,7 @@ export function DataProvider({ initial, children }: { initial: AppData; children
         date: "2026-09-09",
         status: "Processed",
         duration: `${1 + Math.floor(Math.random() * 3)}m ${String(Math.floor(Math.random() * 59)).padStart(2, "0")}s`,
+        findingType: getFindingTypeForScanner(scanner),
       };
       setScannerImports((prev) => [record, ...prev]);
       addActivity({

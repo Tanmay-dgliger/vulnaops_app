@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2, Circle, Upload, RefreshCw, Paperclip, External
 import { useData } from "@/lib/state/DataContext";
 import { formatDate } from "@/lib/business/format";
 import { calculateSlaStatus } from "@/lib/business/sla";
-import { StatusBadge } from "@/components/common/badges";
+import { StatusBadge, FindingTypeBadge } from "@/components/common/badges";
 
 function MetaRow({ label, value, color, mono }: { label: string; value: string; color?: string; mono?: boolean }) {
   return (
@@ -56,6 +56,7 @@ export default function RemediationDetail({ id }: { id: string }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5 flex-wrap mb-2">
               {vuln && <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{vuln.cve}</span>}
+              {vuln && <FindingTypeBadge type={vuln.findingType} />}
               {vuln && <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold" style={{ background: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> {vuln.severity.toUpperCase()}</span>}
               <StatusBadge status={rem.status} />
               {sla?.state === "Breached" && <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium" style={{ background: "#FEF2F2", color: "#DC2626" }}>SLA Breached · {sla.label}</span>}
@@ -184,12 +185,42 @@ export default function RemediationDetail({ id }: { id: string }) {
         <div className="col-span-4 space-y-5">
           <Panel title="Task Details">
             {vuln && <MetaRow label="Finding" value={vuln.cve} mono />}
+            {vuln && <MetaRow label="Tool" value={vuln.scanner} />}
             {vuln && <MetaRow label="CVSS Score" value={String(vuln.cvss)} color="#DC2626" />}
             <MetaRow label="Status" value={rem.status} color="#1D4ED8" />
             <MetaRow label="Target Date" value={formatDate(rem.targetDate)} />
             <MetaRow label="Opened" value={formatDate(rem.opened)} />
             <MetaRow label="Owner" value={rem.owner} />
           </Panel>
+
+          {vuln && vuln.findingType !== "VAPT" && (
+            <Panel title="Source Details">
+              {vuln.findingType === "SAST" && (
+                <>
+                  <MetaRow label="Repository" value={vuln.repository ?? "—"} />
+                  <MetaRow label="Branch" value={vuln.branch ?? "—"} />
+                  <MetaRow label="File" value={vuln.fileName ?? "—"} mono />
+                  {vuln.lineNumber !== undefined && <MetaRow label="Line" value={String(vuln.lineNumber)} />}
+                </>
+              )}
+              {vuln.findingType === "DAST" && (
+                <>
+                  <MetaRow label="Endpoint" value={vuln.endpoint ?? "—"} mono />
+                  <MetaRow label="Method" value={vuln.httpMethod ?? "—"} />
+                  {vuln.parameter && <MetaRow label="Parameter" value={vuln.parameter} />}
+                </>
+              )}
+              {vuln.findingType === "SCA" && (
+                <>
+                  <MetaRow label="Package" value={vuln.packageName ?? "—"} mono />
+                  <MetaRow label="Upgrade From" value={vuln.packageVersion ?? "—"} />
+                  <MetaRow label="Upgrade To" value={vuln.fixedVersion ? `${vuln.fixedVersion}+` : "—"} color="#16A34A" />
+                  <MetaRow label="Ecosystem" value={vuln.ecosystem ?? "—"} />
+                  {vuln.repository && <MetaRow label="Repository" value={vuln.repository} />}
+                </>
+              )}
+            </Panel>
+          )}
 
           <Panel title="Ownership">
             <MetaRow label="Business Unit" value={asset?.businessUnit ?? "—"} />

@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
-import { Download, FileText, BarChart3, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, FileText, BarChart3, TrendingDown, TrendingUp, ChevronDown } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import {
-  getDashboardMetrics, getVulnerabilityTrend, getBusinessUnitRisk, getTopApplications, getTopAssets, getSlaCompliance,
+  getDashboardMetrics, getVulnerabilityTrend, getBusinessUnitRisk, getTopApplications, getTopAssets, getSlaCompliance, isOpen, getTopVulnerablePackages,
 } from "@/lib/business/metrics";
+import { calculateSlaStatus } from "@/lib/business/sla";
+import type { FindingType } from "@/types/vulnerability";
+import { FINDING_TYPE_CFG, StatusBadge, SeverityBadge } from "@/components/common/badges";
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -27,6 +30,26 @@ function CustomTooltip({ active, payload, label }: any) {
 
 function SelectBtn({ label }: { label: string }) {
   return <button className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#334155" }}>{label}</button>;
+}
+
+function FindingTypeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none flex items-center gap-1.5 rounded-md pl-3 pr-7 py-2 text-sm font-medium cursor-pointer outline-none"
+        style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#334155" }}
+      >
+        <option value="">All Types</option>
+        <option value="VAPT">VAPT</option>
+        <option value="SAST">SAST</option>
+        <option value="DAST">DAST</option>
+        <option value="SCA">SCA</option>
+      </select>
+      <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+    </div>
+  );
 }
 
 function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
@@ -49,8 +72,16 @@ function downloadCsv(filename: string, rows: string[][]) {
   URL.revokeObjectURL(url);
 }
 
+const FINDING_TYPES: FindingType[] = ["VAPT", "SAST", "DAST", "SCA"];
+
 export default function MISReporting() {
-  const { vulnerabilities, assets, applications } = useData();
+  const { vulnerabilities: allVulnerabilities, assets, applications } = useData();
+  const [findingTypeFilter, setFindingTypeFilter] = useState("");
+
+  const vulnerabilities = useMemo(
+    () => (findingTypeFilter ? allVulnerabilities.filter((v) => v.findingType === findingTypeFilter) : allVulnerabilities),
+    [allVulnerabilities, findingTypeFilter]
+  );
 
   const metrics = useMemo(() => getDashboardMetrics(vulnerabilities), [vulnerabilities]);
   const trend = useMemo(() => getVulnerabilityTrend(vulnerabilities), [vulnerabilities]);
@@ -58,11 +89,41 @@ export default function MISReporting() {
   const topApps = useMemo(() => getTopApplications(vulnerabilities, applications, 10), [vulnerabilities, applications]);
   const topAssets = useMemo(() => getTopAssets(vulnerabilities, assets, 10), [vulnerabilities, assets]);
   const sla = useMemo(() => getSlaCompliance(vulnerabilities), [vulnerabilities]);
+  const topPackages = useMemo(() => getTopVulnerablePackages(vulnerabilities, 10), [vulnerabilities]);
 
   const falsePositives = vulnerabilities.filter((v) => v.status === "False Positive" || v.status === "Potential False Positive").length;
   const acceptedRisks = vulnerabilities.filter((v) => v.status === "Accepted Risk").length;
   const criticalCount = vulnerabilities.filter((v) => v.severity === "Critical").length;
   const highCount = vulnerabilities.filter((v) => v.severity === "High").length;
+
+  const findingTypeBreakdown = useMemo(
+    () =>
+      FINDING_TYPES.map((type) => {
+        const list = allVulnerabilities.filter((v) => v.findingType === type);
+        const slaBreaches = list.filter((v) => isOpen(v) && calculateSlaStatus(v.severity, v.firstSeen, v.status).state === "Breached").length;
+        return {
+          type,
+          total: list.length,
+          critical: list.filter((v) => v.severity === "Critical").length,
+          high: list.filter((v) => v.severity === "High").length,
+          slaBreaches,
+          remediated: list.filter((v) => v.status === "Closed").length,
+          open: list.filter(isOpen).length,
+        };
+      }),
+    [allVulnerabilities]
+  );
+  const findingTypeTotals = findingTypeBreakdown.reduce(
+    (acc, r) => ({
+      total: acc.total + r.total,
+      critical: acc.critical + r.critical,
+      high: acc.high + r.high,
+      slaBreaches: acc.slaBreaches + r.slaBreaches,
+      remediated: acc.remediated + r.remediated,
+      open: acc.open + r.open,
+    }),
+    { total: 0, critical: 0, high: 0, slaBreaches: 0, remediated: 0, open: 0 }
+  );
 
   const KPIS = [
     { label: "Total Vulnerabilities", value: metrics.totalFindings.toLocaleString(), good: true, accent: "#0F172A" },
@@ -78,7 +139,7 @@ export default function MISReporting() {
   const exportExcel = () => {
     downloadCsv(
       "hawkeye-mis-report.csv",
-      [["CVE", "Title", "Severity", "CVSS", "Status", "Asset", "Environment", "Risk Score"], ...vulnerabilities.map((v) => [v.cve, v.title, v.severity, String(v.cvss), v.status, v.assetId, v.environment, String(v.riskScore)])]
+      [["CVE", "Finding Type", "Title", "Severity", "CVSS", "Status", "Asset", "Environment", "Risk Score"], ...vulnerabilities.map((v) => [v.cve, v.findingType, v.title, v.severity, String(v.cvss), v.status, v.assetId, v.environment, String(v.riskScore)])]
     );
   };
   const exportPdf = () => window.print();
@@ -93,6 +154,7 @@ export default function MISReporting() {
         <div className="flex items-center gap-2 flex-wrap">
           <SelectBtn label="Last 30 Days" />
           <SelectBtn label="All Business Units" />
+          <FindingTypeSelect value={findingTypeFilter} onChange={setFindingTypeFilter} />
           <div className="w-px h-6 bg-slate-200 mx-1" />
           <button className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium" style={{ background: "#F8FAFC", color: "#334155", border: "1px solid #E2E8F0" }}><BarChart3 size={14} /> Generate Report</button>
           <button onClick={exportExcel} className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium" style={{ background: "#F8FAFC", color: "#334155", border: "1px solid #E2E8F0" }}><Download size={14} /> Export Excel</button>
@@ -116,6 +178,45 @@ export default function MISReporting() {
           </div>
         ))}
       </div>
+
+      <SectionCard title="Finding Type Breakdown" subtitle="VAPT / SAST / DAST — how many findings exist, by severity, SLA and remediation status">
+        <table className="w-full text-xs">
+          <thead>
+            <tr style={{ borderBottom: "1px solid #F1F5F9" }}>
+              {["Finding Type", "Total", "Open", "Critical", "High", "SLA Breaches", "Remediated"].map((h) => (
+                <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide text-slate-400">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {findingTypeBreakdown.map((row) => {
+              const c = FINDING_TYPE_CFG[row.type];
+              return (
+                <tr key={row.type} style={{ borderBottom: "1px solid #F8FAFC" }} className="hover:bg-slate-50">
+                  <td className="px-3 py-2.5">
+                    <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide" style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}>{row.type}</span>
+                  </td>
+                  <td className="px-3 py-2.5 font-semibold text-slate-800">{row.total.toLocaleString()}</td>
+                  <td className="px-3 py-2.5 text-slate-600">{row.open.toLocaleString()}</td>
+                  <td className="px-3 py-2.5"><span className="font-bold text-red-600">{row.critical}</span></td>
+                  <td className="px-3 py-2.5"><span className="font-bold text-orange-600">{row.high}</span></td>
+                  <td className="px-3 py-2.5"><span className="font-bold" style={{ color: row.slaBreaches > 0 ? "#DC2626" : "#64748B" }}>{row.slaBreaches}</span></td>
+                  <td className="px-3 py-2.5"><span className="font-bold text-green-600">{row.remediated}</span></td>
+                </tr>
+              );
+            })}
+            <tr>
+              <td className="px-3 py-2.5 font-bold text-slate-700">Total</td>
+              <td className="px-3 py-2.5 font-bold text-slate-900">{findingTypeTotals.total.toLocaleString()}</td>
+              <td className="px-3 py-2.5 font-bold text-slate-700">{findingTypeTotals.open.toLocaleString()}</td>
+              <td className="px-3 py-2.5 font-bold text-red-600">{findingTypeTotals.critical}</td>
+              <td className="px-3 py-2.5 font-bold text-orange-600">{findingTypeTotals.high}</td>
+              <td className="px-3 py-2.5 font-bold" style={{ color: findingTypeTotals.slaBreaches > 0 ? "#DC2626" : "#64748B" }}>{findingTypeTotals.slaBreaches}</td>
+              <td className="px-3 py-2.5 font-bold text-green-600">{findingTypeTotals.remediated}</td>
+            </tr>
+          </tbody>
+        </table>
+      </SectionCard>
 
       <div className="grid grid-cols-12 gap-5">
         <div className="col-span-7">
@@ -221,6 +322,29 @@ export default function MISReporting() {
             </table>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-xl border overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+        <div className="px-5 py-4 border-b" style={{ borderColor: "#F1F5F9" }}>
+          <h3 className="text-sm font-semibold text-slate-900">Top Vulnerable Dependencies</h3>
+          <p className="text-xs text-slate-400 mt-0.5">SCA — open-source packages with the highest exposure across applications</p>
+        </div>
+        <table className="w-full text-xs">
+          <thead><tr style={{ borderBottom: "1px solid #F1F5F9", background: "#FAFBFC" }}>{["Package", "Version", "Severity", "Applications", "CVE", "Status"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-semibold uppercase tracking-wide text-slate-400">{h}</th>)}</tr></thead>
+          <tbody>
+            {topPackages.map((row, i) => (
+              <tr key={`${row.packageName}@${row.packageVersion}`} style={{ borderBottom: i < topPackages.length - 1 ? "1px solid #F8FAFC" : "none" }} className="hover:bg-slate-50">
+                <td className="px-4 py-2.5 font-mono font-semibold text-slate-800">{row.packageName}</td>
+                <td className="px-4 py-2.5 font-mono text-slate-500">{row.packageVersion}</td>
+                <td className="px-4 py-2.5"><SeverityBadge severity={row.severity} /></td>
+                <td className="px-4 py-2.5 font-semibold text-slate-700">{row.applicationCount}</td>
+                <td className="px-4 py-2.5 font-mono text-slate-500">{row.cve}</td>
+                <td className="px-4 py-2.5"><StatusBadge status={row.status} /></td>
+              </tr>
+            ))}
+            {topPackages.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">No vulnerable dependencies found.</td></tr>}
+          </tbody>
+        </table>
       </div>
 
       <div className="flex items-center justify-between text-[10px] text-slate-400 border-t pt-4" style={{ borderColor: "#E2E8F0" }}>
