@@ -1,0 +1,22 @@
+cloudAssetId,assetName,cloudProvider,accountId,region,resourceType,environment,businessUnit,owner,criticality,internetFacing,status,discoverySource,lastSeen
+CLD-001,AWS EC2 — Payments App Server,AWS,AWS-PROD-001,ap-south-1,EC2 Instance,Production,Payments,Rahul Sharma,Critical,true,Running,Cloud Discovery,2026-09-13
+CLD-002,AWS RDS — Payments Database,AWS,AWS-PROD-001,ap-south-1,RDS Instance,Production,Payments,Rahul Sharma,Critical,false,Available,Cloud Discovery,2026-09-13
+CLD-003,AWS ELB — Payments Load Balancer,AWS,AWS-PROD-001,ap-south-1,Load Balancer,Production,Payments,Rahul Sharma,Critical,true,Active,Cloud Discovery,2026-09-13
+CLD-004,AWS EC2 — Fraud Detection Server,AWS,AWS-PROD-001,ap-south-1,EC2 Instance,Production,Payments,Rahul Sharma,Critical,false,Running,Cloud Discovery,2026-09-13
+CLD-005,AWS S3 — Fraud Model Artifacts,AWS,AWS-PROD-001,ap-south-1,S3 Bucket,Production,Payments,Rahul Sharma,High,false,Active,Cloud Discovery,2026-09-13
+CLD-006,AWS EC2 — CRM App Server,AWS,AWS-PROD-002,ap-south-1,EC2 Instance,Production,CRM,Amit Kumar,High,false,Running,Cloud Discovery,2026-09-13
+CLD-007,AWS RDS — CRM Database,AWS,AWS-PROD-002,ap-south-1,RDS Instance,Production,CRM,Amit Kumar,High,false,Available,Cloud Discovery,2026-09-13
+CLD-008,Azure VM — Analytics Warehouse,Azure,AZ-PROD-002,Central India,Virtual Machine,Production,Operations,Deepika Rao,Medium,false,Running,Cloud Discovery,2026-09-13
+CLD-009,Azure Storage — Analytics Data Lake,Azure,AZ-PROD-002,Central India,Storage Account,Production,Operations,Deepika Rao,Medium,false,Active,Cloud Discovery,2026-09-13
+CLD-010,Azure VM — HR Portal Server,Azure,AZ-PROD-003,Central India,Virtual Machine,Production,IT,Rajiv Sinha,Medium,false,Running,Cloud Discovery,2026-09-13
+CLD-011,Kubernetes Cluster — Payments EKS,AWS,AWS-PROD-001,ap-south-1,Kubernetes Cluster,Production,Payments,Rahul Sharma,Critical,false,Active,Cloud Discovery,2026-09-13
+CLD-012,Kubernetes Cluster — Platform Shared EKS,AWS,AWS-PROD-001,ap-south-1,Kubernetes Cluster,Production,Platform,Vikram Patel,High,false,Active,Cloud Discovery,2026-09-13
+CLD-013,AWS EC2 — Mobile Banking API Server,AWS,AWS-PROD-001,ap-south-1,EC2 Instance,Production,Digital,Neha Gupta,Critical,true,Running,Cloud Discovery,2026-09-13
+CLD-014,AWS RDS — Mobile Banking Database,AWS,AWS-PROD-001,ap-south-1,RDS Instance,Production,Digital,Neha Gupta,Critical,false,Available,Cloud Discovery,2026-09-13
+CLD-015,AWS EC2 — Identity Provider Server,AWS,AWS-PROD-001,ap-south-1,EC2 Instance,Production,Platform,Vikram Patel,Critical,true,Running,Cloud Discovery,2026-09-13
+CLD-016,AWS ElastiCache — Session Store,AWS,AWS-PROD-001,ap-south-1,ElastiCache Cluster,Production,Platform,Vikram Patel,High,false,Available,Cloud Discovery,2026-09-13
+CLD-017,Azure VM — Vendor Portal Server,Azure,AZ-PROD-003,Central India,Virtual Machine,Production,IT,Rajiv Sinha,Medium,false,Running,Cloud Discovery,2026-09-13
+CLD-018,AWS S3 — Document Management Storage,AWS,AWS-PROD-002,ap-south-1,S3 Bucket,Production,Digital,Neha Gupta,Medium,false,Active,Cloud Discovery,2026-09-13
+CLD-019,AWS EC2 — Batch Processing Worker,AWS,AWS-PROD-001,ap-south-1,EC2 Instance,Production,Operations,Deepika Rao,Medium,false,Running,Cloud Discovery,2026-09-13
+CLD-020,Azure VM — Dev Sandbox,Azure,AZ-DEV-001,Central India,Virtual Machine,Development,Engineering,Amit Kumar,Low,false,Stopped,Manual Import,2026-09-13
+CLD-021,AWS EC2 — Orphaned Test Instance,AWS,AWS-PROD-001,ap-south-1,EC2 Instance,Development,Engineering,,Low,false,Running,Cloud Discovery,2026-09-13

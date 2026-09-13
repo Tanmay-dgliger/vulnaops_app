@@ -1,0 +1,19 @@
+discoveryId,discoverySource,assetType,assetName,ipAddress,hostname,cloudProvider,environment,discoveredAt,lastSeen,status,matchedAssetId,confidence
+DISC-001,Network Discovery,Server,payments-app-01,10.20.10.21,payments-app-01,,Production,2026-09-12,2026-09-13,Possible Duplicate,AST-058,94
+DISC-002,Network Discovery,Server,new-batch-srv-06,10.22.5.16,new-batch-srv-06,,Production,2026-09-13,2026-09-13,New,,
+DISC-003,Cloud Discovery,Cloud Asset,aws-ec2-mobile-canary,10.90.3.15,,AWS,Production,2026-09-13,2026-09-13,New,,
+DISC-004,EDR,Endpoint,CORP-LT-1042,10.60.2.14,corp-lt-1042,,Production,2026-08-20,2026-09-13,Matched,AST-046,99
+DISC-005,EDR,Endpoint,CORP-LT-1043,10.60.2.15,corp-lt-1043,,Production,2026-08-21,2026-09-13,Matched,AST-047,99
+DISC-006,Network Discovery,Web Server,unmanaged-web-04,10.10.1.44,unmanaged-web-04,,Production,2026-09-01,2026-09-13,Unmanaged,AST-060,88
+DISC-007,Network Discovery,Server,shadow-srv-01,10.24.3.40,shadow-srv-01,,Production,2026-08-15,2026-09-13,Unmanaged,AST-059,91
+DISC-008,Application Discovery,Application,legacy-crm-app-04,10.14.2.40,legacy-crm-app-04,,Staging,2026-09-10,2026-09-13,New,,
+DISC-009,API Discovery,API,payments-internal-admin-api,,,,Production,2026-09-11,2026-09-13,New,,
+DISC-010,Container Discovery,Container,k8s-payments-pod-02,10.16.8.12,k8s-payments-pod-02,,Production,2026-09-12,2026-09-13,New,,
+DISC-011,Cloud Discovery,Cloud Asset,azure-storage-orphaned-01,,,Azure,Development,2026-09-09,2026-09-13,Ignored,,
+DISC-012,Manual Import,Server,vendor-supplied-jump-box,10.8.9.9,vendor-jump-01,,Production,2026-08-28,2026-09-13,Ignored,,
+DISC-013,Network Discovery,Network Device,core-sw-01,10.0.0.1,core-sw-01,,Production,2026-07-15,2026-09-13,Matched,AST-049,97
+DISC-014,Network Discovery,Network Device,edge-fw-01,10.0.0.2,edge-fw-01,,Production,2026-07-15,2026-09-13,Matched,AST-050,97
+DISC-015,Cloud Discovery,Cloud Asset,aws-rds-payments-01,10.90.1.10,,AWS,Production,2026-08-05,2026-09-13,Matched,AST-055,96
+DISC-016,EDR,Endpoint,CORP-WKS-2201,10.60.3.21,corp-wks-2201,,Production,2026-08-22,2026-09-13,Matched,AST-048,98
+DISC-017,Network Discovery,Database,analytics-replica-02,10.22.9.5,analytics-replica-02,,Production,2026-09-13,2026-09-13,New,,
+DISC-018,Container Discovery,Container,k8s-notif-pod-02,10.16.8.34,k8s-notif-pod-02,,Staging,2026-09-13,2026-09-13,New,,

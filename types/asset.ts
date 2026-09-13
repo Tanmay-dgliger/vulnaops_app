@@ -6,9 +6,15 @@ export type AssetType =
   | "Web Server"
   | "Database"
   | "API Gateway"
-  | "Auth Service";
+  | "Auth Service"
+  | "Endpoint"
+  | "Network Device"
+  | "Container"
+  | "Cloud Asset";
 
 export type SlaStatus = "Breached" | "Due Soon" | "Within SLA";
+
+export type AssetStatus = "Active" | "Inactive" | "Decommissioned" | "Unmanaged";
 
 export interface Asset {
   id: string;
@@ -23,4 +29,21 @@ export interface Asset {
   owner: string;
   lastScan: string;
   slaStatus: SlaStatus;
+
+  // Asset Inventory / discovery-oriented fields — optional so existing records keep working.
+  assetSubType?: string;
+  hostname?: string;
+  fqdn?: string;
+  ownerEmail?: string;
+  status?: AssetStatus;
+  internetFacing?: boolean;
+  discoverySource?: string;
+  firstSeen?: string;
+  lastSeen?: string;
+  cloudProvider?: string;
+  cloudAccount?: string;
+  region?: string;
+  location?: string;
+  businessService?: string;
+  description?: string;
 }

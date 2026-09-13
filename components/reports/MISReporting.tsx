@@ -9,6 +9,7 @@ import { useData } from "@/lib/state/DataContext";
 import {
   getDashboardMetrics, getVulnerabilityTrend, getBusinessUnitRisk, getTopApplications, getTopAssets, getSlaCompliance, isOpen, getTopVulnerablePackages,
 } from "@/lib/business/metrics";
+import { getAssetCoverage } from "@/lib/business/asset-posture";
 import { calculateSlaStatus } from "@/lib/business/sla";
 import type { FindingType } from "@/types/vulnerability";
 import { FINDING_TYPE_CFG, StatusBadge, SeverityBadge } from "@/components/common/badges";
@@ -52,6 +53,23 @@ function FindingTypeSelect({ value, onChange }: { value: string; onChange: (v: s
   );
 }
 
+function AssetTypeSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none flex items-center gap-1.5 rounded-md pl-3 pr-7 py-2 text-sm font-medium cursor-pointer outline-none"
+        style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#334155" }}
+      >
+        <option value="">All Asset Types</option>
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
+      <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+    </div>
+  );
+}
+
 function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
@@ -77,11 +95,29 @@ const FINDING_TYPES: FindingType[] = ["VAPT", "SAST", "DAST", "SCA"];
 export default function MISReporting() {
   const { vulnerabilities: allVulnerabilities, assets, applications } = useData();
   const [findingTypeFilter, setFindingTypeFilter] = useState("");
+  const [assetTypeFilter, setAssetTypeFilter] = useState("");
+
+  const assetById = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
+  const assetTypes = useMemo(() => Array.from(new Set(assets.map((a) => a.type))).sort(), [assets]);
 
   const vulnerabilities = useMemo(
-    () => (findingTypeFilter ? allVulnerabilities.filter((v) => v.findingType === findingTypeFilter) : allVulnerabilities),
-    [allVulnerabilities, findingTypeFilter]
+    () =>
+      allVulnerabilities.filter(
+        (v) => (!findingTypeFilter || v.findingType === findingTypeFilter) && (!assetTypeFilter || assetById.get(v.assetId)?.type === assetTypeFilter)
+      ),
+    [allVulnerabilities, findingTypeFilter, assetTypeFilter, assetById]
   );
+
+  const assetCoverage = useMemo(() => getAssetCoverage(assets, allVulnerabilities), [assets, allVulnerabilities]);
+  const assetTypeDistribution = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const a of assets) counts.set(a.type, (counts.get(a.type) ?? 0) + 1);
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  }, [assets]);
+  const criticalAssetCount = assets.filter((a) => a.criticality === "Critical").length;
+  const internetFacingCount = assets.filter((a) => a.internetFacing).length;
+  const unmanagedCount = assets.filter((a) => a.status === "Unmanaged").length;
+  const withoutOwnerCount = assets.filter((a) => !a.owner).length;
 
   const metrics = useMemo(() => getDashboardMetrics(vulnerabilities), [vulnerabilities]);
   const trend = useMemo(() => getVulnerabilityTrend(vulnerabilities), [vulnerabilities]);
@@ -155,6 +191,7 @@ export default function MISReporting() {
           <SelectBtn label="Last 30 Days" />
           <SelectBtn label="All Business Units" />
           <FindingTypeSelect value={findingTypeFilter} onChange={setFindingTypeFilter} />
+          <AssetTypeSelect value={assetTypeFilter} onChange={setAssetTypeFilter} options={assetTypes} />
           <div className="w-px h-6 bg-slate-200 mx-1" />
           <button className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium" style={{ background: "#F8FAFC", color: "#334155", border: "1px solid #E2E8F0" }}><BarChart3 size={14} /> Generate Report</button>
           <button onClick={exportExcel} className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium" style={{ background: "#F8FAFC", color: "#334155", border: "1px solid #E2E8F0" }}><Download size={14} /> Export Excel</button>
@@ -179,7 +216,44 @@ export default function MISReporting() {
         ))}
       </div>
 
-      <SectionCard title="Finding Type Breakdown" subtitle="VAPT / SAST / DAST — how many findings exist, by severity, SLA and remediation status">
+      <div className="grid grid-cols-12 gap-5">
+        <div className="col-span-7">
+          <SectionCard title="Asset Inventory Summary" subtitle="Enterprise technology footprint and security coverage">
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {[
+                { label: "Total Assets", val: assets.length, color: "#0F172A" },
+                { label: "Critical Assets", val: criticalAssetCount, color: "#DC2626" },
+                { label: "Internet-Facing", val: internetFacingCount, color: "#EA580C" },
+                { label: "Unmanaged", val: unmanagedCount, color: "#D97706" },
+                { label: "Without Owner", val: withoutOwnerCount, color: "#7C3AED" },
+                { label: "Coverage", val: `${assetCoverage.coveragePct}%`, color: "#16A34A" },
+              ].map((k) => (
+                <div key={k.label} className="rounded-lg p-3" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">{k.label}</div>
+                  <div className="text-lg font-bold font-heading" style={{ color: k.color }}>{k.val}</div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+        <div className="col-span-5">
+          <SectionCard title="Asset Type Distribution" subtitle="Inventory composition">
+            <div className="space-y-2">
+              {assetTypeDistribution.map(([type, count]) => (
+                <div key={type} className="flex items-center gap-2">
+                  <span className="text-xs text-slate-600 flex-1">{type}</span>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "#F1F5F9" }}>
+                    <div className="h-full rounded-full" style={{ width: `${(count / assets.length) * 100}%`, background: "#2563EB", opacity: 0.8 }} />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 w-8 text-right">{count}</span>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+      </div>
+
+      <SectionCard title="Finding Type Breakdown" subtitle="VAPT / SAST / DAST / SCA — how many findings exist, by severity, SLA and remediation status">
         <table className="w-full text-xs">
           <thead>
             <tr style={{ borderBottom: "1px solid #F1F5F9" }}>

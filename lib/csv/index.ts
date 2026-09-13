@@ -7,6 +7,10 @@ import { getExceptions } from "./exceptions";
 import { getScannerImports } from "./scanner-imports";
 import { getActivities } from "./activities";
 import { getUserAccounts } from "./user-accounts";
+import { getApis } from "./apis";
+import { getCloudAssets } from "./cloud-assets";
+import { getAssetRelationships } from "./asset-relationships";
+import { getAssetDiscoveryRecords } from "./asset-discovery";
 
 export function loadAllData() {
   return {
@@ -19,6 +23,10 @@ export function loadAllData() {
     scannerImports: getScannerImports(),
     activities: getActivities(),
     userAccounts: getUserAccounts(),
+    apis: getApis(),
+    cloudAssets: getCloudAssets(),
+    assetRelationships: getAssetRelationships(),
+    assetDiscovery: getAssetDiscoveryRecords(),
   };
 }
 

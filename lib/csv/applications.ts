@@ -1,7 +1,7 @@
 import raw from "@/data/csv/applications.csv";
-import { parseCsv } from "./parse";
+import { parseCsv, toOptional } from "./parse";
 import type { Application } from "@/types/application";
-import type { BusinessCriticality } from "@/types/vulnerability";
+import type { BusinessCriticality, Environment } from "@/types/vulnerability";
 
 export function getApplications(): Application[] {
   const rows = parseCsv<Record<string, string>>(raw);
@@ -11,5 +11,12 @@ export function getApplications(): Application[] {
     businessUnit: r.businessUnit,
     owner: r.owner,
     criticality: r.criticality as BusinessCriticality,
+    businessService: toOptional(r.businessService),
+    environment: toOptional(r.environment) as Environment | undefined,
+    repository: toOptional(r.repository),
+    repositoryUrl: toOptional(r.repositoryUrl),
+    technology: toOptional(r.technology),
+    status: toOptional(r.status),
+    lastUpdated: toOptional(r.lastUpdated),
   }));
 }

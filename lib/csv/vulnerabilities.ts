@@ -43,6 +43,8 @@ export function getVulnerabilities(): Vulnerability[] {
     falsePositiveReason: toOptional(r.falsePositiveReason),
     affectedComponent: toOptional(r.affectedComponent),
     findingType: r.findingType as FindingType,
+    apiId: toOptional(r.apiId),
+    dependencyId: toOptional(r.dependencyId),
     assessmentType: toOptional(r.assessmentType),
     repository: toOptional(r.repository),
     branch: toOptional(r.branch),

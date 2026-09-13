@@ -78,12 +78,13 @@ function KanbanCard({ card, onOpen }: { card: BoardCard; onOpen: () => void }) {
   );
 }
 
-export default function RemediationBoard() {
+export default function RemediationBoard({ initialStatus }: { initialStatus?: string } = {}) {
   const router = useRouter();
   const { remediations, vulnerabilities } = useData();
   const [filterSev, setFilterSev] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
-  const [view, setView] = useState<"board" | "list">("board");
+  const [statusFilter] = useState<string>(() => initialStatus ?? "");
+  const [view, setView] = useState<"board" | "list">(() => (initialStatus ? "list" : "board"));
 
   const vulnById = useMemo(() => new Map(vulnerabilities.map((v) => [v.id, v])), [vulnerabilities]);
 
@@ -100,7 +101,9 @@ export default function RemediationBoard() {
     [remediations, vulnById]
   );
 
-  const filtered = cards.filter((c) => (filterSev === "all" || c.vuln.severity === filterSev) && (filterType === "all" || c.vuln.findingType === filterType));
+  const filtered = cards.filter(
+    (c) => (filterSev === "all" || c.vuln.severity === filterSev) && (filterType === "all" || c.vuln.findingType === filterType) && (!statusFilter || c.status === statusFilter)
+  );
 
   return (
     <div className="p-6 space-y-4 max-w-[1360px] mx-auto">

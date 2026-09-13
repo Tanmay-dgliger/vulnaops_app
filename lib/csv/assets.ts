@@ -1,6 +1,6 @@
 import raw from "@/data/csv/assets.csv";
-import { parseCsv } from "./parse";
-import type { Asset, AssetType, SlaStatus } from "@/types/asset";
+import { parseCsv, toBool, toOptional } from "./parse";
+import type { Asset, AssetStatus, AssetType, SlaStatus } from "@/types/asset";
 import type { BusinessCriticality, Environment } from "@/types/vulnerability";
 
 export function getAssets(): Asset[] {
@@ -18,5 +18,20 @@ export function getAssets(): Asset[] {
     owner: r.owner,
     lastScan: r.lastScan,
     slaStatus: r.slaStatus as SlaStatus,
+    assetSubType: toOptional(r.assetSubType),
+    hostname: toOptional(r.hostname),
+    fqdn: toOptional(r.fqdn),
+    ownerEmail: toOptional(r.ownerEmail),
+    status: toOptional(r.status) as AssetStatus | undefined,
+    internetFacing: r.internetFacing ? toBool(r.internetFacing) : undefined,
+    discoverySource: toOptional(r.discoverySource),
+    firstSeen: toOptional(r.firstSeen),
+    lastSeen: toOptional(r.lastSeen),
+    cloudProvider: toOptional(r.cloudProvider),
+    cloudAccount: toOptional(r.cloudAccount),
+    region: toOptional(r.region),
+    location: toOptional(r.location),
+    businessService: toOptional(r.businessService),
+    description: toOptional(r.description),
   }));
 }

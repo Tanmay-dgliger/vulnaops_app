@@ -8,6 +8,8 @@ import type { Exception, ExceptionStatus } from "@/types/exception";
 import type { Activity, ActionType, EntityType } from "@/types/activity";
 import type { ScannerImport } from "@/types/scanner-import";
 import type { UserAccount } from "@/types/user-account";
+import type { Asset } from "@/types/asset";
+import type { AssetDiscoveryRecord } from "@/types/asset-discovery";
 import { calculateRiskScore } from "@/lib/business/risk-score";
 import { getFindingTypeForScanner } from "@/lib/business/scanner";
 import { useToast } from "@/components/common/Toast";
@@ -63,6 +65,21 @@ interface DataContextValue extends DataState {
   addUserAccount: (input: UserAccount) => boolean;
   updateUserAccount: (originalUsername: string, input: UserAccount) => boolean;
   deleteUserAccount: (username: string) => void;
+  getApi: (id: string) => DataState["apis"][number] | undefined;
+  getCloudAsset: (id: string) => DataState["cloudAssets"][number] | undefined;
+  matchDiscovery: (discoveryId: string, assetId: string) => void;
+  createAssetFromDiscovery: (discoveryId: string, input: NewAssetInput) => Asset;
+  ignoreDiscovery: (discoveryId: string) => void;
+}
+
+export interface NewAssetInput {
+  name: string;
+  type: Asset["type"];
+  environment: Asset["environment"];
+  owner: string;
+  criticality: Asset["criticality"];
+  businessUnit?: string;
+  applicationId?: string;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -79,7 +96,7 @@ function nowTimestamp() {
 
 export function DataProvider({ initial, children }: { initial: AppData; children: React.ReactNode }) {
   const [vulnerabilities, setVulnerabilities] = useState(initial.vulnerabilities);
-  const [assets] = useState(initial.assets);
+  const [assets, setAssets] = useState(initial.assets);
   const [applications] = useState(initial.applications);
   const [remediations, setRemediations] = useState(initial.remediations);
   const [exceptions, setExceptions] = useState(initial.exceptions);
@@ -87,6 +104,10 @@ export function DataProvider({ initial, children }: { initial: AppData; children
   const [activities, setActivities] = useState(initial.activities);
   const [users] = useState(initial.users);
   const [userAccounts, setUserAccounts] = useState(initial.userAccounts);
+  const [apis] = useState(initial.apis);
+  const [cloudAssets] = useState(initial.cloudAssets);
+  const [assetRelationships] = useState(initial.assetRelationships);
+  const [assetDiscovery, setAssetDiscovery] = useState(initial.assetDiscovery);
   const { notify } = useToast();
 
   const vulnById = useMemo(() => new Map(vulnerabilities.map((v) => [v.id, v])), [vulnerabilities]);
@@ -94,6 +115,9 @@ export function DataProvider({ initial, children }: { initial: AppData; children
   const applicationById = useMemo(() => new Map(applications.map((a) => [a.id, a])), [applications]);
   const remediationById = useMemo(() => new Map(remediations.map((r) => [r.id, r])), [remediations]);
   const exceptionById = useMemo(() => new Map(exceptions.map((e) => [e.id, e])), [exceptions]);
+  const apiById = useMemo(() => new Map(apis.map((a) => [a.id, a])), [apis]);
+  const cloudAssetById = useMemo(() => new Map(cloudAssets.map((c) => [c.id, c])), [cloudAssets]);
+  const discoveryById = useMemo(() => new Map(assetDiscovery.map((d) => [d.id, d])), [assetDiscovery]);
 
   const addActivity = useCallback((input: AddActivityInput): Activity => {
     const activity: Activity = {
@@ -505,6 +529,77 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     [notify]
   );
 
+  const matchDiscovery = useCallback(
+    (discoveryId: string, assetId: string) => {
+      const discovery = discoveryById.get(discoveryId);
+      const asset = assetById.get(assetId);
+      if (!discovery || !asset) return;
+      setAssetDiscovery((prev) => prev.map((d) => (d.id === discoveryId ? { ...d, status: "Matched", matchedAssetId: assetId } : d)));
+      addActivity({
+        user: CURRENT_USER.name,
+        userRole: CURRENT_USER.role,
+        action: "comment",
+        entity: discovery.assetName,
+        entityType: "System",
+        detail: `Discovery matched to existing asset ${asset.name}`,
+      });
+      notify(`Matched to ${asset.name}`);
+    },
+    [discoveryById, assetById, addActivity, notify]
+  );
+
+  const createAssetFromDiscovery = useCallback(
+    (discoveryId: string, input: NewAssetInput): Asset => {
+      const discovery = discoveryById.get(discoveryId);
+      const today = "2026-09-13";
+      const asset: Asset = {
+        id: nextId("AST"),
+        name: input.name,
+        type: input.type,
+        environment: input.environment,
+        applicationId: input.applicationId || "",
+        businessUnit: input.businessUnit || "Unassigned",
+        criticality: input.criticality,
+        ip: discovery?.ipAddress || "",
+        os: "Unknown",
+        owner: input.owner,
+        lastScan: today,
+        slaStatus: "Within SLA",
+        hostname: discovery?.hostname,
+        status: "Active",
+        internetFacing: false,
+        discoverySource: discovery?.discoverySource ?? "Manual Import",
+        firstSeen: discovery?.discoveredAt ?? today,
+        lastSeen: today,
+      };
+      setAssets((prev) => [...prev, asset]);
+      if (discovery) {
+        setAssetDiscovery((prev) => prev.map((d) => (d.id === discoveryId ? { ...d, status: "Matched", matchedAssetId: asset.id } : d)));
+      }
+      addActivity({
+        user: CURRENT_USER.name,
+        userRole: CURRENT_USER.role,
+        action: "comment",
+        entity: asset.name,
+        entityType: "System",
+        detail: `Asset added to inventory from ${discovery?.discoverySource ?? "manual entry"}`,
+      });
+      notify(`${asset.name} added to Asset Inventory`);
+      return asset;
+    },
+    [discoveryById, addActivity, notify]
+  );
+
+  const ignoreDiscovery = useCallback(
+    (discoveryId: string) => {
+      const discovery = discoveryById.get(discoveryId);
+      if (!discovery) return;
+      setAssetDiscovery((prev) => prev.map((d) => (d.id === discoveryId ? { ...d, status: "Ignored" } : d)));
+      notify(`Discovery record for ${discovery.assetName} ignored`);
+    },
+    [discoveryById, notify]
+  );
+
   const value: DataContextValue = {
     vulnerabilities,
     assets,
@@ -515,12 +610,18 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     activities,
     users,
     userAccounts,
+    apis,
+    cloudAssets,
+    assetRelationships,
+    assetDiscovery,
     getVulnerability: (id) => vulnById.get(id),
     getAsset: (id) => assetById.get(id),
     getApplication: (id) => applicationById.get(id),
     getRemediation: (id) => remediationById.get(id),
     getRemediationForVuln: (vulnerabilityId) => remediations.find((r) => r.vulnerabilityId === vulnerabilityId),
     getException: (id) => exceptionById.get(id),
+    getApi: (id) => apiById.get(id),
+    getCloudAsset: (id) => cloudAssetById.get(id),
     addActivity,
     completeTriage,
     mergeDuplicate,
@@ -538,6 +639,9 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     addUserAccount,
     updateUserAccount,
     deleteUserAccount,
+    matchDiscovery,
+    createAssetFromDiscovery,
+    ignoreDiscovery,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard, Shield, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
   ScrollText, Settings, Bell, HelpCircle, ChevronRight, LogOut, FileCode2, Globe2, PackageSearch,
+  Radar, Plug, Cloud, Share2, ListChecks, CheckSquare,
 } from "lucide-react";
 import type { Activity } from "@/types/activity";
 import { useData } from "@/lib/state/DataContext";
@@ -28,37 +29,44 @@ interface NavGroup {
 const NAV: NavGroup[] = [
   { items: [{ href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard size={16} /> }] },
   {
-    label: "Vulnerabilities",
-    items: [
-      { href: "/vulnerabilities", label: "All Vulnerabilities", icon: <Shield size={16} /> },
-      { href: "/exceptions", label: "Exceptions", icon: <FileX size={16} /> },
-    ],
-  },
-  {
-    label: "Application Security",
-    items: [
-      { href: "/vulnerabilities?findingType=SAST", label: "SAST Findings", icon: <FileCode2 size={16} /> },
-      { href: "/vulnerabilities?findingType=DAST", label: "DAST Findings", icon: <Globe2 size={16} /> },
-      { href: "/vulnerabilities?findingType=SCA", label: "SCA Findings", icon: <PackageSearch size={16} /> },
-    ],
-  },
-  { label: "Remediation", items: [{ href: "/remediation", label: "Remediation Queue", icon: <ClipboardList size={16} /> }] },
-  {
     label: "Inventory",
     items: [
-      { href: "/assets", label: "Assets", icon: <Server size={16} /> },
+      { href: "/assets", label: "Asset Inventory", icon: <Server size={16} /> },
+      { href: "/asset-discovery", label: "Asset Discovery", icon: <Radar size={16} /> },
       { href: "/applications", label: "Applications", icon: <AppWindow size={16} /> },
+      { href: "/apis", label: "APIs", icon: <Plug size={16} /> },
+      { href: "/cloud-assets", label: "Cloud Assets", icon: <Cloud size={16} /> },
+      { href: "/relationships", label: "Relationships", icon: <Share2 size={16} /> },
     ],
   },
   {
-    label: "Data",
+    label: "Security Findings",
+    items: [
+      { href: "/vulnerabilities", label: "All Findings", icon: <Shield size={16} /> },
+      { href: "/vulnerabilities?findingType=VAPT", label: "VAPT", icon: <Radar size={16} /> },
+      { href: "/vulnerabilities?findingType=SAST", label: "SAST", icon: <FileCode2 size={16} /> },
+      { href: "/vulnerabilities?findingType=DAST", label: "DAST", icon: <Globe2 size={16} /> },
+      { href: "/vulnerabilities?findingType=SCA", label: "SCA", icon: <PackageSearch size={16} /> },
+    ],
+  },
+  {
+    label: "Risk & Remediation",
+    items: [
+      { href: "/vulnerabilities?status=New", label: "Triage", icon: <ListChecks size={16} /> },
+      { href: "/remediation", label: "Remediation", icon: <ClipboardList size={16} /> },
+      { href: "/exceptions", label: "Exceptions", icon: <FileX size={16} /> },
+      { href: "/remediation?status=Validation", label: "Validation", icon: <CheckSquare size={16} /> },
+    ],
+  },
+  {
+    label: "Reporting",
     items: [
       { href: "/scanner-imports", label: "Scanner Imports", icon: <Upload size={16} /> },
-      { href: "/reports", label: "Reports / MIS", icon: <BarChart3 size={16} /> },
+      { href: "/reports", label: "MIS Reports", icon: <BarChart3 size={16} /> },
       { href: "/audit", label: "Audit Trail", icon: <ScrollText size={16} /> },
     ],
   },
-  { label: "System", items: [{ href: "/administration", label: "Administration", icon: <Settings size={16} /> }] },
+  { label: "Administration", items: [{ href: "/administration", label: "User Management", icon: <Settings size={16} /> }] },
 ];
 
 const FLAT_ITEMS = NAV.flatMap((g) => g.items);

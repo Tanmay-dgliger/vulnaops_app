@@ -1,25 +1,25 @@
-id,name,businessUnit,owner,criticality
-APP-01,Payments API,Payments,Rahul Sharma,Critical
-APP-02,CRM,CRM,Amit Kumar,High
-APP-03,Digital Portal,Digital,Neha Gupta,Critical
-APP-04,Core Banking DB,Core Banking,Priya Nair,Critical
-APP-05,Auth Service,Platform,Vikram Patel,Critical
-APP-06,Enterprise Service Bus,Integration,Manish Tiwari,High
-APP-07,Core Infrastructure,Infrastructure,Manish Tiwari,High
-APP-08,Customer Portal,Digital,Deepika Rao,Medium
-APP-09,Batch Processing,Operations,Deepika Rao,Medium
-APP-10,Email Gateway,IT,Priya Nair,Low
-APP-11,Log Aggregator,Platform,Deepika Rao,Medium
-APP-12,CDN,Digital,Vikram Patel,Low
-APP-13,Dev Sandbox,Engineering,Amit Kumar,Low
-APP-14,Fraud Detection Engine,Payments,Rahul Sharma,Critical
-APP-15,Loan Origination System,Core Banking,Priya Nair,High
-APP-16,Treasury Management,Core Banking,Priyanka Desai,Critical
-APP-17,HR Portal,IT,Rajiv Sinha,Medium
-APP-18,Vendor Management Portal,IT,Rajiv Sinha,Medium
-APP-19,Document Management System,Digital,Neha Gupta,Medium
-APP-20,Notification Service,Platform,Vikram Patel,Medium
-APP-21,API Gateway Platform,Platform,Vikram Patel,High
-APP-22,Mobile Banking App,Digital,Neha Gupta,Critical
-APP-23,Analytics Data Warehouse,Operations,Deepika Rao,Medium
-APP-24,Identity Provider,Platform,Vikram Patel,Critical
+id,name,businessUnit,owner,criticality,businessService,environment,repository,repositoryUrl,technology,status,lastUpdated
+APP-01,Payments API,Payments,Rahul Sharma,Critical,Payments,Production,payments-api,https://git.corp.internal/vulnops/payments-api,Java / Spring Boot,Active,2026-09-09
+APP-02,CRM,CRM,Amit Kumar,High,CRM,Production,crm-platform,https://git.corp.internal/vulnops/crm-platform,Node.js / React,Active,2026-09-09
+APP-03,Digital Portal,Digital,Neha Gupta,Critical,Digital,Production,digital-portal,https://git.corp.internal/vulnops/digital-portal,Node.js / Next.js,Active,2026-09-09
+APP-04,Core Banking DB,Core Banking,Priya Nair,Critical,Core Banking,Production,core-banking-db,https://git.corp.internal/vulnops/core-banking-db,PostgreSQL,Active,2026-09-09
+APP-05,Auth Service,Platform,Vikram Patel,Critical,Platform,Production,auth-service,https://git.corp.internal/vulnops/auth-service,Java / Spring Security,Active,2026-09-09
+APP-06,Enterprise Service Bus,Integration,Manish Tiwari,High,Integration,Production,esb-integration-layer,https://git.corp.internal/vulnops/esb-integration-layer,Java / Apache Camel,Active,2026-09-09
+APP-07,Core Infrastructure,Infrastructure,Manish Tiwari,High,Infrastructure,Production,core-infra-tools,https://git.corp.internal/vulnops/core-infra-tools,Python / Ansible,Active,2026-09-09
+APP-08,Customer Portal,Digital,Deepika Rao,Medium,Digital,Production,customer-portal,https://git.corp.internal/vulnops/customer-portal,Node.js / React,Active,2026-09-09
+APP-09,Batch Processing,Operations,Deepika Rao,Medium,Operations,Production,batch-processing-jobs,https://git.corp.internal/vulnops/batch-processing-jobs,Python,Active,2026-09-09
+APP-10,Email Gateway,IT,Priya Nair,Low,IT,Production,email-gateway,https://git.corp.internal/vulnops/email-gateway,Java,Active,2026-09-09
+APP-11,Log Aggregator,Platform,Deepika Rao,Medium,Platform,Production,log-aggregator,https://git.corp.internal/vulnops/log-aggregator,Java / Elasticsearch,Active,2026-09-09
+APP-12,CDN,Digital,Vikram Patel,Low,Digital,Production,cdn-edge-config,https://git.corp.internal/vulnops/cdn-edge-config,Node.js,Active,2026-09-09
+APP-13,Dev Sandbox,Engineering,Amit Kumar,Low,Engineering,Development,dev-sandbox,https://git.corp.internal/vulnops/dev-sandbox,Multiple,Active,2026-09-09
+APP-14,Fraud Detection Engine,Payments,Rahul Sharma,Critical,Payments,Production,fraud-detection-engine,https://git.corp.internal/vulnops/fraud-detection-engine,Python / Java,Active,2026-09-09
+APP-15,Loan Origination System,Core Banking,Priya Nair,High,Core Banking,Production,loan-origination-system,https://git.corp.internal/vulnops/loan-origination-system,JavaScript / Node.js,Active,2026-09-09
+APP-16,Treasury Management,Core Banking,Priyanka Desai,Critical,Core Banking,Production,treasury-management,https://git.corp.internal/vulnops/treasury-management,Java / Spring Boot,Active,2026-09-09
+APP-17,HR Portal,IT,Rajiv Sinha,Medium,IT,Production,hr-portal,https://git.corp.internal/vulnops/hr-portal,.NET,Active,2026-09-09
+APP-18,Vendor Management Portal,IT,Rajiv Sinha,Medium,IT,Production,vendor-management-portal,https://git.corp.internal/vulnops/vendor-management-portal,Ruby on Rails,Active,2026-09-09
+APP-19,Document Management System,Digital,Neha Gupta,Medium,Digital,Production,document-management-system,https://git.corp.internal/vulnops/document-management-system,Java,Active,2026-09-09
+APP-20,Notification Service,Platform,Vikram Patel,Medium,Platform,Production,notification-service,https://git.corp.internal/vulnops/notification-service,Node.js,Active,2026-09-09
+APP-21,API Gateway Platform,Platform,Vikram Patel,High,Platform,Production,api-gateway-platform,https://git.corp.internal/vulnops/api-gateway-platform,Java / Spring Cloud Gateway,Active,2026-09-09
+APP-22,Mobile Banking App,Digital,Neha Gupta,Critical,Digital,Production,mobile-banking-app,https://git.corp.internal/vulnops/mobile-banking-app,React Native,Active,2026-09-09
+APP-23,Analytics Data Warehouse,Operations,Deepika Rao,Medium,Operations,Production,analytics-data-warehouse,https://git.corp.internal/vulnops/analytics-data-warehouse,Python / Django,Active,2026-09-09
+APP-24,Identity Provider,Platform,Vikram Patel,Critical,Platform,Production,identity-provider,https://git.corp.internal/vulnops/identity-provider,Java,Active,2026-09-09

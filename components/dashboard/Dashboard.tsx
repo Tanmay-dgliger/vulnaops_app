@@ -13,6 +13,7 @@ import {
 import { getLifecycleStages } from "@/lib/business/lifecycle";
 import { SeverityBadge, SlaBadge, StatusBadge, FINDING_TYPE_CFG } from "@/components/common/badges";
 import { calculateAge, calculateSlaStatus } from "@/lib/business/sla";
+import { getAssetCoverage } from "@/lib/business/asset-posture";
 
 interface KPICard {
   label: string;
@@ -184,6 +185,11 @@ export default function Dashboard() {
   const sla = useMemo(() => getSlaCompliance(filteredVulnerabilities), [filteredVulnerabilities]);
   const findingTypeData = useMemo(() => getFindingTypeDistribution(filteredVulnerabilities), [filteredVulnerabilities]);
   const findingTypeTotal = findingTypeData.reduce((a, d) => a + d.value, 0) || 1;
+  const coverage = useMemo(() => getAssetCoverage(filteredAssets, filteredVulnerabilities), [filteredAssets, filteredVulnerabilities]);
+  const criticalAssets = filteredAssets.filter((a) => a.criticality === "Critical").length;
+  const internetFacingAssets = filteredAssets.filter((a) => a.internetFacing).length;
+  const unmanagedAssets = filteredAssets.filter((a) => a.status === "Unmanaged").length;
+  const assetsWithoutOwner = filteredAssets.filter((a) => !a.owner).length;
 
   const total = severityData.reduce((a, d) => a + d.value, 0) || 1;
   const compliancePct = sla.compliancePct / 100;
@@ -349,6 +355,42 @@ export default function Dashboard() {
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-12 gap-4">
+        <div className="col-span-8 rounded-xl border p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-900">Asset Exposure</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Enterprise technology footprint</p>
+          </div>
+          <div className="grid grid-cols-5 gap-3">
+            {[
+              { label: "Total Assets", value: filteredAssets.length, href: "/assets", color: "#0F172A" },
+              { label: "Critical Assets", value: criticalAssets, href: "/assets?criticality=Critical", color: "#DC2626" },
+              { label: "Internet-Facing", value: internetFacingAssets, href: "/assets", color: "#EA580C" },
+              { label: "Unmanaged Assets", value: unmanagedAssets, href: "/asset-discovery", color: "#D97706" },
+              { label: "Without Owner", value: assetsWithoutOwner, href: "/assets", color: "#7C3AED" },
+            ].map((k) => (
+              <Link key={k.label} href={k.href} className="rounded-lg p-3 text-center block hover:shadow-sm transition-shadow" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+                <div className="text-xl font-bold font-heading" style={{ color: k.color }}>{k.value.toLocaleString()}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mt-1">{k.label}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="col-span-4 rounded-xl border p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <div className="mb-3">
+            <h3 className="text-sm font-semibold text-slate-900">Security Coverage</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Assets with at least one finding</p>
+          </div>
+          <div className="flex items-end gap-3">
+            <div className="text-3xl font-bold font-heading text-slate-900">{coverage.coveragePct}%</div>
+            <div className="text-xs text-slate-500 mb-1">{coverage.scanned.toLocaleString()} of {coverage.total.toLocaleString()} assets scanned</div>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden mt-3" style={{ background: "#F1F5F9" }}>
+            <div className="h-full rounded-full" style={{ width: `${coverage.coveragePct}%`, background: "#2563EB" }} />
+          </div>
         </div>
       </section>
 

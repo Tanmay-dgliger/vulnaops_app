@@ -2,14 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, AppWindow, Server } from "lucide-react";
+import { ArrowLeft, AppWindow, Server, Plug, GitBranch, Package, Cloud } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
-import { SeverityBadge, StatusBadge, CvssBadge } from "@/components/common/badges";
+import { SeverityBadge, StatusBadge, CvssBadge, FindingTypeBadge } from "@/components/common/badges";
 import { isOpen, getApplicationDependencyRisk } from "@/lib/business/metrics";
+import { getApplicationAssets } from "@/lib/business/asset-posture";
+import type { FindingType } from "@/types/vulnerability";
+
+const FINDING_TYPE_ORDER: FindingType[] = ["VAPT", "SAST", "DAST", "SCA"];
 
 export default function ApplicationDetail({ id }: { id: string }) {
   const router = useRouter();
-  const { getApplication, assets, vulnerabilities } = useData();
+  const { getApplication, assets, vulnerabilities, apis, cloudAssets, assetRelationships, applications } = useData();
   const app = getApplication(id);
 
   if (!app) {
@@ -24,7 +28,12 @@ export default function ApplicationDetail({ id }: { id: string }) {
   const medium = open.filter((v) => v.severity === "Medium").length;
   const low = open.filter((v) => v.severity === "Low").length;
   const riskScore = open.length ? Math.max(...open.map((v) => v.riskScore)) : 0;
+  const overallRisk = riskScore >= 90 ? "Critical" : riskScore >= 70 ? "High" : riskScore >= 40 ? "Medium" : "Low";
+  const overallRiskColor = { Critical: "#DC2626", High: "#EA580C", Medium: "#D97706", Low: "#16A34A" }[overallRisk];
   const depRisk = getApplicationDependencyRisk(app.id, vulnerabilities);
+  const infra = getApplicationAssets(app.id, { assets, apis, cloudAssets, relationships: assetRelationships, applications });
+  const dependencyCount = new Set(appVulns.filter((v) => v.findingType === "SCA" && v.packageName).map((v) => `${v.packageName}@${v.packageVersion}`)).size;
+  const findingTypeCounts = FINDING_TYPE_ORDER.map((type) => ({ type, count: appVulns.filter((v) => v.findingType === type).length }));
 
   return (
     <div className="p-6 space-y-5 max-w-[1360px] mx-auto">
@@ -53,6 +62,54 @@ export default function ApplicationDetail({ id }: { id: string }) {
               <div className="text-2xl font-bold text-slate-900 font-heading">{s.val}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-5">
+        <div className="col-span-7 rounded-xl border p-5" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-900">Asset &amp; Infrastructure</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Technology footprint supporting this application</p>
+          </div>
+          <div className="grid grid-cols-5 gap-3">
+            {[
+              { label: "Servers", val: infra.servers.length, icon: <Server size={14} /> },
+              { label: "APIs", val: infra.apis.length, icon: <Plug size={14} /> },
+              { label: "Databases", val: infra.databases.length, icon: <Server size={14} /> },
+              { label: "Cloud Assets", val: infra.cloudAssets.length, icon: <Cloud size={14} /> },
+              { label: "Dependencies", val: dependencyCount, icon: <Package size={14} /> },
+            ].map((s) => (
+              <div key={s.label} className="rounded-lg p-3 text-center" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+                <div className="flex items-center justify-center text-slate-400 mb-1">{s.icon}</div>
+                <div className="text-xl font-bold text-slate-900 font-heading">{s.val}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mt-0.5">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          {infra.repository && (
+            <div className="flex items-center gap-1.5 mt-3 text-xs text-slate-500"><GitBranch size={12} className="text-slate-400" /> Repository: <span className="font-mono text-slate-700">{infra.repository}</span></div>
+          )}
+        </div>
+
+        <div className="col-span-5 rounded-xl border p-5" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Security Findings</h3>
+              <p className="text-xs text-slate-500 mt-0.5">By finding type</p>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Overall Risk</div>
+              <div className="text-sm font-bold" style={{ color: overallRiskColor }}>{overallRisk}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {findingTypeCounts.map(({ type, count }) => (
+              <Link key={type} href={`/vulnerabilities?findingType=${type}&applicationId=${app.id}`} className="rounded-lg p-2.5 text-center block hover:shadow-sm transition-shadow" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+                <FindingTypeBadge type={type} />
+                <div className="text-lg font-bold text-slate-900 mt-1.5">{count}</div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 

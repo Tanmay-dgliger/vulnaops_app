@@ -1,0 +1,43 @@
+apiId,apiName,applicationId,endpoint,method,environment,owner,criticality,internetFacing,authentication,status,lastSeen
+API-001,Payment Processing API,APP-01,/api/v1/payments,POST,Production,Rahul Sharma,Critical,true,OAuth2,Active,2026-09-13
+API-002,Payment Status API,APP-01,/api/v1/payments/{id}/status,GET,Production,Rahul Sharma,Critical,true,OAuth2,Active,2026-09-13
+API-003,Refunds API,APP-01,/api/v1/payments/refunds,POST,Production,Rahul Sharma,Critical,true,OAuth2,Active,2026-09-13
+API-004,Contacts API,APP-02,/api/v1/contacts,GET,Production,Amit Kumar,High,false,API Key,Active,2026-09-13
+API-005,Lead Capture API,APP-02,/api/v1/leads,POST,Production,Amit Kumar,High,true,API Key,Active,2026-09-13
+API-006,Digital Portal Content API,APP-03,/api/v1/content,GET,Production,Neha Gupta,Critical,true,OAuth2,Active,2026-09-13
+API-007,Digital Portal Search API,APP-03,/api/v1/search,GET,Production,Neha Gupta,Critical,true,OAuth2,Active,2026-09-13
+API-008,Core Banking DB API,APP-04,/api/v1/status,GET,Production,Priya Nair,Critical,false,OAuth2,Active,2026-09-13
+API-009,Auth Session API,APP-05,/api/v1/auth/session,POST,Production,Vikram Patel,Critical,true,OAuth2,Active,2026-09-13
+API-010,Token Introspection API,APP-05,/api/v1/auth/introspect,POST,Production,Vikram Patel,Critical,false,mTLS,Active,2026-09-13
+API-011,Enterprise Service Bus API,APP-06,/api/v1/status,GET,Production,Manish Tiwari,High,false,OAuth2,Active,2026-09-13
+API-012,Core Infrastructure API 1,APP-07,/api/v1/status,GET,Production,Manish Tiwari,High,false,OAuth2,Active,2026-09-13
+API-013,Core Infrastructure API 2,APP-07,/api/v1/items,POST,Production,Manish Tiwari,High,false,API Key,Active,2026-09-13
+API-014,Customer Portal API,APP-08,/api/v1/status,GET,Production,Deepika Rao,Medium,true,OAuth2,Active,2026-09-13
+API-015,Batch Processing API 1,APP-09,/api/v1/status,GET,Production,Deepika Rao,Medium,false,OAuth2,Active,2026-09-13
+API-016,Batch Processing API 2,APP-09,/api/v1/items,POST,Production,Deepika Rao,Medium,false,API Key,Active,2026-09-13
+API-017,Email Gateway API,APP-10,/api/v1/status,GET,Production,Priya Nair,Low,false,OAuth2,Active,2026-09-13
+API-018,Log Aggregator API 1,APP-11,/api/v1/status,GET,Production,Deepika Rao,Medium,false,OAuth2,Active,2026-09-13
+API-019,Log Aggregator API 2,APP-11,/api/v1/items,POST,Production,Deepika Rao,Medium,false,API Key,Active,2026-09-13
+API-020,CDN API,APP-12,/api/v1/status,GET,Production,Vikram Patel,Low,true,OAuth2,Active,2026-09-13
+API-021,Dev Sandbox API 1,APP-13,/api/v1/status,GET,Development,Amit Kumar,Low,false,OAuth2,Active,2026-09-13
+API-022,Dev Sandbox API 2,APP-13,/api/v1/items,POST,Development,Amit Kumar,Low,false,API Key,Active,2026-09-13
+API-023,Fraud Scoring API,APP-14,/api/v1/fraud/score,POST,Production,Rahul Sharma,Critical,false,mTLS,Active,2026-09-13
+API-024,Fraud Case API,APP-14,/api/v1/fraud/cases,GET,Production,Rahul Sharma,Critical,false,OAuth2,Active,2026-09-13
+API-025,Loan Application API,APP-15,/api/v1/loans/apply,POST,Production,Priya Nair,High,true,OAuth2,Active,2026-09-13
+API-026,Loan Status API,APP-15,/api/v1/loans/{id},GET,Production,Priya Nair,High,true,OAuth2,Active,2026-09-13
+API-027,Treasury Positions API,APP-16,/api/v1/treasury/positions,GET,Production,Priyanka Desai,Critical,false,mTLS,Active,2026-09-13
+API-028,Treasury Settlement API,APP-16,/api/v1/treasury/settlements,POST,Production,Priyanka Desai,Critical,false,mTLS,Active,2026-09-13
+API-029,HR Portal API 1,APP-17,/api/v1/status,GET,Production,Rajiv Sinha,Medium,false,OAuth2,Active,2026-09-13
+API-030,HR Portal API 2,APP-17,/api/v1/items,POST,Production,Rajiv Sinha,Medium,false,API Key,Active,2026-09-13
+API-031,Vendor Management Portal API,APP-18,/api/v1/status,GET,Production,Rajiv Sinha,Medium,false,OAuth2,Active,2026-09-13
+API-032,Document Search API,APP-19,/api/v1/documents/search,GET,Production,Neha Gupta,Medium,false,OAuth2,Active,2026-09-13
+API-033,Document Upload API,APP-19,/api/v1/documents,POST,Production,Neha Gupta,Medium,false,OAuth2,Active,2026-09-13
+API-034,Notification Dispatch API,APP-20,/api/v1/notifications,POST,Production,Vikram Patel,Medium,false,API Key,Active,2026-09-13
+API-035,Notification Webhook API,APP-20,/api/v1/notifications/webhook,POST,Production,Vikram Patel,Medium,true,API Key,Active,2026-09-13
+API-036,Gateway Routing API,APP-21,/api/v1/gateway/route,POST,Production,Vikram Patel,High,false,mTLS,Active,2026-09-13
+API-037,Gateway Config API,APP-21,/api/v1/internal/config,GET,Production,Vikram Patel,High,true,API Key,Active,2026-09-13
+API-038,Mobile Balance API,APP-22,/mobile/api/v2/balance,GET,Production,Neha Gupta,Critical,true,OAuth2,Active,2026-09-13
+API-039,Mobile Transfer API,APP-22,/mobile/api/v2/transfer,POST,Production,Neha Gupta,Critical,true,OAuth2,Active,2026-09-13
+API-040,Analytics Query API,APP-23,/api/v1/analytics/query,GET,Production,Deepika Rao,Medium,false,API Key,Active,2026-09-13
+API-041,Identity Token API,APP-24,/api/v1/idp/token,POST,Production,Vikram Patel,Critical,true,OAuth2,Active,2026-09-13
+API-042,Identity User API,APP-24,/api/v1/idp/users,GET,Production,Vikram Patel,Critical,false,mTLS,Active,2026-09-13
