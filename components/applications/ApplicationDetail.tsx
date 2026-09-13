@@ -2,18 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, AppWindow, Server, Plug, GitBranch, Package, Cloud } from "lucide-react";
+import { ArrowLeft, AppWindow, Server, Plug, GitBranch, Package, Cloud, ClipboardCheck } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import { SeverityBadge, StatusBadge, CvssBadge, FindingTypeBadge } from "@/components/common/badges";
 import { isOpen, getApplicationDependencyRisk } from "@/lib/business/metrics";
 import { getApplicationAssets } from "@/lib/business/asset-posture";
+import { calculateAuditStatus, getAuditHistory } from "@/lib/business/audits";
+import { formatDate } from "@/lib/business/format";
 import type { FindingType } from "@/types/vulnerability";
 
 const FINDING_TYPE_ORDER: FindingType[] = ["VAPT", "SAST", "DAST", "SCA"];
 
 export default function ApplicationDetail({ id }: { id: string }) {
   const router = useRouter();
-  const { getApplication, assets, vulnerabilities, apis, cloudAssets, assetRelationships, applications } = useData();
+  const { getApplication, assets, vulnerabilities, apis, cloudAssets, assetRelationships, applications, audits, auditScopes, auditFindings } = useData();
   const app = getApplication(id);
 
   if (!app) {
@@ -34,6 +36,7 @@ export default function ApplicationDetail({ id }: { id: string }) {
   const infra = getApplicationAssets(app.id, { assets, apis, cloudAssets, relationships: assetRelationships, applications });
   const dependencyCount = new Set(appVulns.filter((v) => v.findingType === "SCA" && v.packageName).map((v) => `${v.packageName}@${v.packageVersion}`)).size;
   const findingTypeCounts = FINDING_TYPE_ORDER.map((type) => ({ type, count: appVulns.filter((v) => v.findingType === type).length }));
+  const auditHistory = getAuditHistory(app.id, audits, auditScopes, auditFindings);
 
   return (
     <div className="p-6 space-y-5 max-w-[1360px] mx-auto">
@@ -181,6 +184,29 @@ export default function ApplicationDetail({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      <div className="rounded-xl border overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b" style={{ borderColor: "#F1F5F9", background: "#FAFBFC" }}><ClipboardCheck size={14} className="text-slate-400" /><h3 className="text-sm font-semibold text-slate-900">Audit History</h3></div>
+        {auditHistory.length === 0 ? (
+          <p className="px-5 py-4 text-xs text-slate-400">No audits recorded for this application yet.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead><tr style={{ borderBottom: "1px solid #F1F5F9", background: "#FAFBFC" }}>{["Audit Type", "Status", "Date", "Next Audit", "Open Findings"].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">{h}</th>)}</tr></thead>
+            <tbody>
+              {auditHistory.map((h, i) => (
+                <tr key={h.audit.id} className="hover:bg-slate-50 transition-colors cursor-pointer" style={{ borderBottom: i < auditHistory.length - 1 ? "1px solid #F8FAFC" : "none" }} onClick={() => router.push(`/audits/${h.audit.id}`)}>
+                  <td className="px-4 py-3"><span className="text-xs font-semibold text-slate-800">{h.audit.auditType}</span></td>
+                  <td className="px-4 py-3"><StatusBadge status={calculateAuditStatus(h.audit)} /></td>
+                  <td className="px-4 py-3"><span className="text-xs text-slate-500">{h.audit.actualEndDate ? formatDate(h.audit.actualEndDate) : formatDate(h.audit.plannedEndDate)}</span></td>
+                  <td className="px-4 py-3"><span className="text-xs text-slate-500">{h.audit.nextAuditDate ? formatDate(h.audit.nextAuditDate) : "—"}</span></td>
+                  <td className="px-4 py-3"><span className="text-xs font-semibold" style={{ color: h.openFindings > 0 ? "#DC2626" : "#16A34A" }}>{h.openFindings}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
       <div className="h-4" />
     </div>
   );

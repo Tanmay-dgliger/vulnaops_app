@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard, Shield, FileX, ClipboardList, Server, AppWindow, Upload, BarChart3,
   ScrollText, Settings, Bell, HelpCircle, ChevronRight, LogOut, FileCode2, Globe2, PackageSearch,
-  Radar, Plug, Cloud, Share2, ListChecks, CheckSquare,
+  Radar, Plug, Cloud, Share2, ListChecks, CheckSquare, CalendarDays, CalendarClock, ClipboardCheck, FileSearch,
 } from "lucide-react";
 import type { Activity } from "@/types/activity";
 import { useData } from "@/lib/state/DataContext";
@@ -56,6 +56,15 @@ const NAV: NavGroup[] = [
       { href: "/remediation", label: "Remediation", icon: <ClipboardList size={16} /> },
       { href: "/exceptions", label: "Exceptions", icon: <FileX size={16} /> },
       { href: "/remediation?status=Validation", label: "Validation", icon: <CheckSquare size={16} /> },
+    ],
+  },
+  {
+    label: "Audit & Compliance",
+    items: [
+      { href: "/audit-calendar", label: "Audit Calendar", icon: <CalendarDays size={16} /> },
+      { href: "/audit-schedule", label: "Audit Schedule", icon: <CalendarClock size={16} /> },
+      { href: "/audits", label: "Audits", icon: <ClipboardCheck size={16} /> },
+      { href: "/audit-findings", label: "Audit Findings", icon: <FileSearch size={16} /> },
     ],
   },
   {

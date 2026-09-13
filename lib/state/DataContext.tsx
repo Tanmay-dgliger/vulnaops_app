@@ -10,6 +10,9 @@ import type { ScannerImport } from "@/types/scanner-import";
 import type { UserAccount } from "@/types/user-account";
 import type { Asset } from "@/types/asset";
 import type { AssetDiscoveryRecord } from "@/types/asset-discovery";
+import type { Audit, AuditFrequency, AuditPriority, AuditScopeType, AuditStatus, AuditType } from "@/types/audit";
+import type { AuditScope } from "@/types/audit-scope";
+import type { AuditFinding, AuditFindingStatus } from "@/types/audit-finding";
 import { calculateRiskScore } from "@/lib/business/risk-score";
 import { getFindingTypeForScanner } from "@/lib/business/scanner";
 import { useToast } from "@/components/common/Toast";
@@ -70,6 +73,12 @@ interface DataContextValue extends DataState {
   matchDiscovery: (discoveryId: string, assetId: string) => void;
   createAssetFromDiscovery: (discoveryId: string, input: NewAssetInput) => Asset;
   ignoreDiscovery: (discoveryId: string) => void;
+  getAudit: (id: string) => Audit | undefined;
+  getAuditFinding: (id: string) => AuditFinding | undefined;
+  scheduleAudit: (input: ScheduleAuditInput) => Audit;
+  updateAuditStatus: (auditId: string, status: AuditStatus) => void;
+  createAuditFinding: (auditId: string, input: NewAuditFindingInput) => AuditFinding;
+  createRemediationFromAuditFinding: (findingId: string, owner: string) => Remediation;
 }
 
 export interface NewAssetInput {
@@ -80,6 +89,37 @@ export interface NewAssetInput {
   criticality: Asset["criticality"];
   businessUnit?: string;
   applicationId?: string;
+}
+
+export interface ScheduleAuditInput {
+  name: string;
+  auditType: AuditType;
+  description: string;
+  scopeType: AuditScopeType;
+  scopeId: string;
+  scopeName: string;
+  businessUnit: string;
+  priority: AuditPriority;
+  auditor: string;
+  plannedStartDate: string;
+  plannedEndDate: string;
+  frequency: AuditFrequency;
+  nextAuditDate?: string;
+  riskLevel?: Audit["riskLevel"];
+  additionalScope?: { scopeType: AuditScopeType; scopeId: string; scopeName: string }[];
+}
+
+export interface NewAuditFindingInput {
+  title: string;
+  description: string;
+  category: string;
+  severity: AuditFinding["severity"];
+  assetId?: string;
+  applicationId?: string;
+  apiId?: string;
+  owner?: string;
+  dueDate?: string;
+  riskScore?: number;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -108,6 +148,9 @@ export function DataProvider({ initial, children }: { initial: AppData; children
   const [cloudAssets] = useState(initial.cloudAssets);
   const [assetRelationships] = useState(initial.assetRelationships);
   const [assetDiscovery, setAssetDiscovery] = useState(initial.assetDiscovery);
+  const [audits, setAudits] = useState(initial.audits);
+  const [auditScopes, setAuditScopes] = useState(initial.auditScopes);
+  const [auditFindings, setAuditFindings] = useState(initial.auditFindings);
   const { notify } = useToast();
 
   const vulnById = useMemo(() => new Map(vulnerabilities.map((v) => [v.id, v])), [vulnerabilities]);
@@ -118,6 +161,8 @@ export function DataProvider({ initial, children }: { initial: AppData; children
   const apiById = useMemo(() => new Map(apis.map((a) => [a.id, a])), [apis]);
   const cloudAssetById = useMemo(() => new Map(cloudAssets.map((c) => [c.id, c])), [cloudAssets]);
   const discoveryById = useMemo(() => new Map(assetDiscovery.map((d) => [d.id, d])), [assetDiscovery]);
+  const auditById = useMemo(() => new Map(audits.map((a) => [a.id, a])), [audits]);
+  const auditFindingById = useMemo(() => new Map(auditFindings.map((f) => [f.id, f])), [auditFindings]);
 
   const addActivity = useCallback((input: AddActivityInput): Activity => {
     const activity: Activity = {
@@ -140,6 +185,14 @@ export function DataProvider({ initial, children }: { initial: AppData; children
 
   const patchException = useCallback((id: string, patch: Partial<Exception>) => {
     setExceptions((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  }, []);
+
+  const patchAuditFinding = useCallback((id: string, patch: Partial<AuditFinding>) => {
+    setAuditFindings((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+  }, []);
+
+  const patchAudit = useCallback((id: string, patch: Partial<Audit>) => {
+    setAudits((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   }, []);
 
   const completeTriage = useCallback(
@@ -331,7 +384,7 @@ export function DataProvider({ initial, children }: { initial: AppData; children
       if (!rem) return;
       const progress = status === "New" ? 0 : status === "Assigned" ? 15 : status === "In Progress" ? 55 : status === "Validation" ? 85 : 100;
       patchRemediation(id, { status, progress });
-      const vuln = vulnById.get(rem.vulnerabilityId);
+      const vuln = rem.vulnerabilityId ? vulnById.get(rem.vulnerabilityId) : undefined;
       if (vuln) {
         const statusMap: Record<RemediationStatus, VulnerabilityStatus> = {
           New: "New",
@@ -352,9 +405,30 @@ export function DataProvider({ initial, children }: { initial: AppData; children
         });
         patchVulnerability(vuln.id, { status: statusMap[status] });
       }
+      const finding = rem.auditFindingId ? auditFindingById.get(rem.auditFindingId) : undefined;
+      if (finding) {
+        const statusMap: Record<RemediationStatus, AuditFindingStatus> = {
+          New: "Open",
+          Assigned: "Assigned",
+          "In Progress": "In Remediation",
+          Validation: "Pending Validation",
+          Closed: "Closed",
+        };
+        addActivity({
+          user: CURRENT_USER.name,
+          userRole: CURRENT_USER.role,
+          action: "status_changed",
+          entity: finding.title,
+          entityType: "System",
+          from: finding.status,
+          to: statusMap[status],
+          severity: finding.severity,
+        });
+        patchAuditFinding(finding.id, { status: statusMap[status] });
+      }
       notify(`Remediation status updated to ${status}`);
     },
-    [remediationById, vulnById, patchRemediation, patchVulnerability, addActivity, notify]
+    [remediationById, vulnById, auditFindingById, patchRemediation, patchVulnerability, patchAuditFinding, addActivity, notify]
   );
 
   const toggleChecklistItem = useCallback(
@@ -374,7 +448,7 @@ export function DataProvider({ initial, children }: { initial: AppData; children
       const rem = remediationById.get(id);
       if (!rem) return;
       patchRemediation(id, { validationResult: "Pending", status: "Validation", progress: Math.max(rem.progress, 85) });
-      const vuln = vulnById.get(rem.vulnerabilityId);
+      const vuln = rem.vulnerabilityId ? vulnById.get(rem.vulnerabilityId) : undefined;
       if (vuln) {
         addActivity({
           user: CURRENT_USER.name,
@@ -387,9 +461,22 @@ export function DataProvider({ initial, children }: { initial: AppData; children
         });
         patchVulnerability(vuln.id, { status: "Validation" });
       }
+      const finding = rem.auditFindingId ? auditFindingById.get(rem.auditFindingId) : undefined;
+      if (finding) {
+        addActivity({
+          user: CURRENT_USER.name,
+          userRole: CURRENT_USER.role,
+          action: "revalidation",
+          entity: finding.title,
+          entityType: "System",
+          detail: "Revalidation requested for audit finding remediation",
+          severity: finding.severity,
+        });
+        patchAuditFinding(finding.id, { status: "Pending Validation" });
+      }
       notify("Revalidation requested — scan scheduled for next maintenance window");
     },
-    [remediationById, vulnById, patchRemediation, patchVulnerability, addActivity, notify]
+    [remediationById, vulnById, auditFindingById, patchRemediation, patchVulnerability, patchAuditFinding, addActivity, notify]
   );
 
   const simulateValidation = useCallback(
@@ -405,7 +492,7 @@ export function DataProvider({ initial, children }: { initial: AppData; children
         progress: 100,
         checklist,
       });
-      const vuln = vulnById.get(rem.vulnerabilityId);
+      const vuln = rem.vulnerabilityId ? vulnById.get(rem.vulnerabilityId) : undefined;
       if (vuln) {
         patchVulnerability(vuln.id, { status: "Closed" });
         addActivity({
@@ -429,10 +516,34 @@ export function DataProvider({ initial, children }: { initial: AppData; children
           severity: vuln.severity,
         });
       }
+      const finding = rem.auditFindingId ? auditFindingById.get(rem.auditFindingId) : undefined;
+      if (finding) {
+        patchAuditFinding(finding.id, { status: "Closed" });
+        addActivity({
+          user: "System",
+          userRole: "Automation",
+          action: "validated",
+          entity: finding.title,
+          entityType: "System",
+          detail: `Validation scan PASSED for audit finding ${finding.id}`,
+          severity: finding.severity,
+        });
+        addActivity({
+          user: CURRENT_USER.name,
+          userRole: CURRENT_USER.role,
+          action: "closed",
+          entity: finding.title,
+          entityType: "System",
+          from: "Validation",
+          to: "Closed",
+          detail: "Remediation validated and audit finding closed",
+          severity: finding.severity,
+        });
+      }
       notify("Remediation validated successfully");
-      window.setTimeout(() => notify("Vulnerability closed"), 600);
+      window.setTimeout(() => notify(vuln ? "Vulnerability closed" : "Audit finding closed"), 600);
     },
-    [remediationById, vulnById, patchRemediation, patchVulnerability, addActivity, notify]
+    [remediationById, vulnById, auditFindingById, patchRemediation, patchVulnerability, patchAuditFinding, addActivity, notify]
   );
 
   const addComment = useCallback(
@@ -600,6 +711,162 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     [discoveryById, notify]
   );
 
+  const scheduleAudit = useCallback(
+    (input: ScheduleAuditInput): Audit => {
+      const audit: Audit = {
+        id: nextId("AUD"),
+        name: input.name,
+        auditType: input.auditType,
+        description: input.description,
+        status: "Scheduled",
+        priority: input.priority,
+        scopeType: input.scopeType,
+        scopeId: input.scopeId,
+        scopeName: input.scopeName,
+        businessUnit: input.businessUnit,
+        owner: CURRENT_USER.name,
+        auditor: input.auditor,
+        auditorEmail: `${input.auditor.trim().toLowerCase().replace(/\s+/g, ".")}@vulnops-demo.com`,
+        plannedStartDate: input.plannedStartDate,
+        plannedEndDate: input.plannedEndDate,
+        frequency: input.frequency,
+        nextAuditDate: input.nextAuditDate,
+        riskLevel: input.riskLevel ?? "Medium",
+        findingCount: 0,
+        criticalFindings: 0,
+        highFindings: 0,
+        mediumFindings: 0,
+        lowFindings: 0,
+        createdDate: "2026-09-14",
+      };
+      setAudits((prev) => [audit, ...prev]);
+      const scopeRows: AuditScope[] = [
+        { auditId: audit.id, scopeType: input.scopeType, scopeId: input.scopeId, scopeName: input.scopeName },
+        ...(input.additionalScope ?? []).map((s) => ({ auditId: audit.id, ...s })),
+      ];
+      setAuditScopes((prev) => [...prev, ...scopeRows]);
+      addActivity({
+        user: CURRENT_USER.name,
+        userRole: CURRENT_USER.role,
+        action: "comment",
+        entity: audit.name,
+        entityType: "System",
+        detail: `Audit scheduled — ${audit.auditType} covering ${audit.scopeName}`,
+      });
+      notify(`${audit.name} scheduled`);
+      return audit;
+    },
+    [addActivity, notify]
+  );
+
+  const updateAuditStatus = useCallback(
+    (auditId: string, status: AuditStatus) => {
+      const audit = auditById.get(auditId);
+      if (!audit) return;
+      const patch: Partial<Audit> = { status };
+      if (status === "In Progress" && !audit.actualStartDate) patch.actualStartDate = "2026-09-14";
+      if (status === "Completed") patch.actualEndDate = "2026-09-14";
+      patchAudit(auditId, patch);
+      addActivity({
+        user: CURRENT_USER.name,
+        userRole: CURRENT_USER.role,
+        action: "status_changed",
+        entity: audit.name,
+        entityType: "System",
+        from: audit.status,
+        to: status,
+      });
+      notify(`${audit.name} marked ${status}`);
+    },
+    [auditById, patchAudit, addActivity, notify]
+  );
+
+  const createAuditFinding = useCallback(
+    (auditId: string, input: NewAuditFindingInput): AuditFinding => {
+      const finding: AuditFinding = {
+        id: nextId("AF"),
+        auditId,
+        title: input.title,
+        description: input.description,
+        category: input.category,
+        severity: input.severity,
+        status: "Open",
+        assetId: input.assetId,
+        applicationId: input.applicationId,
+        apiId: input.apiId,
+        owner: input.owner,
+        dueDate: input.dueDate,
+        createdDate: "2026-09-14",
+        riskScore: input.riskScore ?? { Critical: 90, High: 70, Medium: 50, Low: 25 }[input.severity],
+      };
+      setAuditFindings((prev) => [finding, ...prev]);
+      const audit = auditById.get(auditId);
+      if (audit) {
+        patchAudit(auditId, {
+          findingCount: audit.findingCount + 1,
+          criticalFindings: audit.criticalFindings + (input.severity === "Critical" ? 1 : 0),
+          highFindings: audit.highFindings + (input.severity === "High" ? 1 : 0),
+          mediumFindings: audit.mediumFindings + (input.severity === "Medium" ? 1 : 0),
+          lowFindings: audit.lowFindings + (input.severity === "Low" ? 1 : 0),
+        });
+        addActivity({
+          user: CURRENT_USER.name,
+          userRole: CURRENT_USER.role,
+          action: "comment",
+          entity: finding.title,
+          entityType: "System",
+          detail: `Audit finding recorded on ${audit.name}`,
+          severity: finding.severity,
+        });
+      }
+      notify("Audit finding created");
+      return finding;
+    },
+    [auditById, patchAudit, addActivity, notify]
+  );
+
+  const createRemediationFromAuditFinding = useCallback(
+    (findingId: string, owner: string): Remediation => {
+      const finding = auditFindingById.get(findingId);
+      const rem: Remediation = {
+        id: nextId("REM"),
+        auditFindingId: findingId,
+        action: finding ? `Remediate ${finding.title.toLowerCase()}` : "Remediate audit finding",
+        owner,
+        targetDate: finding?.dueDate ?? "",
+        opened: "2026-09-14",
+        status: "Assigned",
+        progress: 5,
+        validationResult: "Not Requested",
+        checklist: [
+          { id: "1", label: "Root cause identified and validated", done: false },
+          { id: "2", label: "Change request raised", done: false },
+          { id: "3", label: "Fix deployed to production", done: false },
+          { id: "4", label: "Validation scan requested", done: false },
+          { id: "5", label: "Closure and sign-off", done: false },
+        ],
+        comments: [],
+        evidence: [],
+      };
+      setRemediations((prev) => [rem, ...prev]);
+      if (finding) {
+        patchAuditFinding(findingId, { status: "In Remediation", assignedTo: owner, remediationId: rem.id });
+        addActivity({
+          user: CURRENT_USER.name,
+          userRole: CURRENT_USER.role,
+          action: "assigned",
+          entity: finding.title,
+          entityType: "System",
+          to: owner,
+          severity: finding.severity,
+        });
+      }
+      notify("Remediation created from audit finding");
+      return rem;
+    },
+    [auditFindingById, patchAuditFinding, addActivity, notify]
+  );
+
   const value: DataContextValue = {
     vulnerabilities,
     assets,
@@ -614,6 +881,9 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     cloudAssets,
     assetRelationships,
     assetDiscovery,
+    audits,
+    auditScopes,
+    auditFindings,
     getVulnerability: (id) => vulnById.get(id),
     getAsset: (id) => assetById.get(id),
     getApplication: (id) => applicationById.get(id),
@@ -642,6 +912,12 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     matchDiscovery,
     createAssetFromDiscovery,
     ignoreDiscovery,
+    getAudit: (id) => auditById.get(id),
+    getAuditFinding: (id) => auditFindingById.get(id),
+    scheduleAudit,
+    updateAuditStatus,
+    createAuditFinding,
+    createRemediationFromAuditFinding,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

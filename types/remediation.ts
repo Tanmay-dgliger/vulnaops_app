@@ -24,7 +24,10 @@ export interface Evidence {
 
 export interface Remediation {
   id: string;
-  vulnerabilityId: string;
+  /** Exactly one of vulnerabilityId / auditFindingId identifies what this remediation is for —
+   *  a security finding (VAPT/SAST/DAST/SCA) or an audit finding. Same workflow either way. */
+  vulnerabilityId?: string;
+  auditFindingId?: string;
   action: string;
   owner: string;
   targetDate: string;

@@ -1,4 +1,4 @@
-import type { Vulnerability, VulnerabilitySeverity } from "@/types/vulnerability";
+import type { VulnerabilitySeverity } from "@/types/vulnerability";
 
 export const SLA_DAYS: Record<VulnerabilitySeverity, number> = {
   Critical: 7,
@@ -36,7 +36,7 @@ function addDays(dateStr: string, days: number): string {
 export function calculateSlaStatus(
   severity: VulnerabilitySeverity,
   firstSeen: string,
-  status: Vulnerability["status"],
+  status: string,
   now: Date = new Date()
 ): SlaInfo {
   const dueDate = addDays(firstSeen, SLA_DAYS[severity]);

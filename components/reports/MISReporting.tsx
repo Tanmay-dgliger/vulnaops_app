@@ -13,6 +13,9 @@ import { getAssetCoverage } from "@/lib/business/asset-posture";
 import { calculateSlaStatus } from "@/lib/business/sla";
 import type { FindingType } from "@/types/vulnerability";
 import { FINDING_TYPE_CFG, StatusBadge, SeverityBadge } from "@/components/common/badges";
+import { calculateAuditStatus, getUpcomingAudits, getOverdueAudits } from "@/lib/business/audits";
+import { formatDate } from "@/lib/business/format";
+import Link from "next/link";
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -93,7 +96,8 @@ function downloadCsv(filename: string, rows: string[][]) {
 const FINDING_TYPES: FindingType[] = ["VAPT", "SAST", "DAST", "SCA"];
 
 export default function MISReporting() {
-  const { vulnerabilities: allVulnerabilities, assets, applications } = useData();
+  const { vulnerabilities: allVulnerabilities, assets, applications, audits, auditFindings } = useData();
+  const now = useMemo(() => new Date(), []);
   const [findingTypeFilter, setFindingTypeFilter] = useState("");
   const [assetTypeFilter, setAssetTypeFilter] = useState("");
 
@@ -126,6 +130,61 @@ export default function MISReporting() {
   const topAssets = useMemo(() => getTopAssets(vulnerabilities, assets, 10), [vulnerabilities, assets]);
   const sla = useMemo(() => getSlaCompliance(vulnerabilities), [vulnerabilities]);
   const topPackages = useMemo(() => getTopVulnerablePackages(vulnerabilities, 10), [vulnerabilities]);
+
+  const auditEffectiveStatuses = useMemo(() => audits.map((a) => calculateAuditStatus(a, now)), [audits, now]);
+  const auditTotals = {
+    total: audits.length,
+    scheduled: auditEffectiveStatuses.filter((s) => s === "Scheduled").length,
+    inProgress: auditEffectiveStatuses.filter((s) => s === "In Progress").length,
+    completed: auditEffectiveStatuses.filter((s) => s === "Completed").length,
+    overdue: auditEffectiveStatuses.filter((s) => s === "Overdue").length,
+  };
+  const openAuditFindings = auditFindings.filter((f) => f.status !== "Closed" && f.status !== "Accepted Risk");
+  const criticalAuditFindings = auditFindings.filter((f) => f.severity === "Critical").length;
+  const highAuditFindings = auditFindings.filter((f) => f.severity === "High").length;
+
+  const auditsByType = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const a of audits) counts.set(a.auditType, (counts.get(a.auditType) ?? 0) + 1);
+    return Array.from(counts.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [audits]);
+
+  const auditsByStatus = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const s of auditEffectiveStatuses) counts.set(s, (counts.get(s) ?? 0) + 1);
+    return Array.from(counts.entries()).map(([name, value]) => ({ name, value }));
+  }, [auditEffectiveStatuses]);
+
+  const auditsByBU = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const a of audits) counts.set(a.businessUnit, (counts.get(a.businessUnit) ?? 0) + 1);
+    return Array.from(counts.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [audits]);
+
+  const auditFindingsBySeverity = useMemo(() => {
+    const order = ["Critical", "High", "Medium", "Low"] as const;
+    const colors: Record<string, string> = { Critical: "#DC2626", High: "#EA580C", Medium: "#D97706", Low: "#16A34A" };
+    return order.map((sev) => ({ name: sev, value: auditFindings.filter((f) => f.severity === sev).length, color: colors[sev] }));
+  }, [auditFindings]);
+
+  const auditCompletionTrend = useMemo(() => {
+    const months: { key: string; label: string }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleString("en-US", { month: "short" }) });
+    }
+    return months.map(({ key, label }) => ({
+      month: label,
+      completed: audits.filter((a) => {
+        if (a.status !== "Completed" || !a.actualEndDate) return false;
+        const d = new Date(a.actualEndDate);
+        return `${d.getFullYear()}-${d.getMonth()}` === key;
+      }).length,
+    }));
+  }, [audits, now]);
+
+  const upcomingAudits = useMemo(() => getUpcomingAudits(audits, now), [audits, now]);
+  const overdueAudits = useMemo(() => getOverdueAudits(audits, now), [audits, now]);
 
   const falsePositives = vulnerabilities.filter((v) => v.status === "False Positive" || v.status === "Potential False Positive").length;
   const acceptedRisks = vulnerabilities.filter((v) => v.status === "Accepted Risk").length;
@@ -419,6 +478,137 @@ export default function MISReporting() {
             {topPackages.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">No vulnerable dependencies found.</td></tr>}
           </tbody>
         </table>
+      </div>
+
+      <SectionCard title="Audit &amp; Compliance" subtitle="Audit programme execution, coverage and findings">
+        <div className="grid grid-cols-8 gap-3 mb-5">
+          {[
+            { label: "Total Audits", val: auditTotals.total, color: "#0F172A" },
+            { label: "Scheduled", val: auditTotals.scheduled, color: "#2563EB" },
+            { label: "In Progress", val: auditTotals.inProgress, color: "#D97706" },
+            { label: "Completed", val: auditTotals.completed, color: "#16A34A" },
+            { label: "Overdue", val: auditTotals.overdue, color: "#DC2626" },
+            { label: "Open Audit Findings", val: openAuditFindings.length, color: "#0F172A" },
+            { label: "Critical Findings", val: criticalAuditFindings, color: "#DC2626" },
+            { label: "High Findings", val: highAuditFindings, color: "#EA580C" },
+          ].map((k) => (
+            <div key={k.label} className="rounded-lg p-3" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1 leading-tight">{k.label}</div>
+              <div className="text-lg font-bold font-heading" style={{ color: k.color }}>{k.val}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-12 gap-5 mb-5">
+          <div className="col-span-4">
+            <div className="text-xs font-semibold text-slate-900 mb-2">Audits by Type</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={auditsByType} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: "#64748B" }} axisLine={false} tickLine={false} width={110} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Audits" fill="#2563EB" radius={[0, 3, 3, 0]} maxBarSize={12} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="col-span-4">
+            <div className="text-xs font-semibold text-slate-900 mb-2">Audits by Status</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={auditsByStatus} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                <XAxis dataKey="name" tick={{ fontSize: 8, fill: "#94A3B8" }} axisLine={false} tickLine={false} interval={0} angle={-25} textAnchor="end" height={40} />
+                <YAxis tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={28} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Audits" fill="#7C3AED" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="col-span-4">
+            <div className="text-xs font-semibold text-slate-900 mb-2">Audits by Business Unit</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={auditsByBU} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: "#64748B" }} axisLine={false} tickLine={false} width={90} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Audits" fill="#16A34A" radius={[0, 3, 3, 0]} maxBarSize={12} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-12 gap-5">
+          <div className="col-span-5">
+            <div className="text-xs font-semibold text-slate-900 mb-2">Audit Findings by Severity</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={auditFindingsBySeverity} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={28} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Findings" radius={[3, 3, 0, 0]} maxBarSize={28}>
+                  {auditFindingsBySeverity.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="col-span-7">
+            <div className="text-xs font-semibold text-slate-900 mb-2">Audit Completion Trend</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <LineChart data={auditCompletionTrend} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line type="monotone" dataKey="completed" name="Completed Audits" stroke="#2563EB" strokeWidth={2} dot={{ r: 3, fill: "#2563EB" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </SectionCard>
+
+      <div className="grid grid-cols-12 gap-5">
+        <div className="col-span-6">
+          <div className="rounded-xl border overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: "#F1F5F9" }}><h3 className="text-sm font-semibold text-slate-900">Upcoming Audit Report</h3></div>
+            <table className="w-full text-xs">
+              <thead><tr style={{ borderBottom: "1px solid #F1F5F9", background: "#FAFBFC" }}>{["Audit", "Type", "Priority", "Planned Start", "Auditor"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-semibold uppercase tracking-wide text-slate-400">{h}</th>)}</tr></thead>
+              <tbody>
+                {upcomingAudits.slice(0, 8).map((a, i) => (
+                  <tr key={a.id} style={{ borderBottom: i < Math.min(upcomingAudits.length, 8) - 1 ? "1px solid #F8FAFC" : "none" }} className="hover:bg-slate-50">
+                    <td className="px-4 py-2.5"><Link href={`/audits/${a.id}`} className="font-semibold text-blue-700 hover:text-blue-800">{a.name}</Link></td>
+                    <td className="px-4 py-2.5 text-slate-500">{a.auditType}</td>
+                    <td className="px-4 py-2.5"><SeverityBadge severity={a.priority} /></td>
+                    <td className="px-4 py-2.5 text-slate-500">{formatDate(a.plannedStartDate)}</td>
+                    <td className="px-4 py-2.5 text-slate-700">{a.auditor}</td>
+                  </tr>
+                ))}
+                {upcomingAudits.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">No upcoming audits.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="col-span-6">
+          <div className="rounded-xl border overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: "#F1F5F9" }}><h3 className="text-sm font-semibold text-slate-900">Overdue Audit Report</h3></div>
+            <table className="w-full text-xs">
+              <thead><tr style={{ borderBottom: "1px solid #F1F5F9", background: "#FAFBFC" }}>{["Audit", "Type", "Planned End", "Auditor", "Findings"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-semibold uppercase tracking-wide text-slate-400">{h}</th>)}</tr></thead>
+              <tbody>
+                {overdueAudits.slice(0, 8).map((a, i) => (
+                  <tr key={a.id} style={{ borderBottom: i < Math.min(overdueAudits.length, 8) - 1 ? "1px solid #F8FAFC" : "none" }} className="hover:bg-slate-50">
+                    <td className="px-4 py-2.5"><Link href={`/audits/${a.id}`} className="font-semibold text-blue-700 hover:text-blue-800">{a.name}</Link></td>
+                    <td className="px-4 py-2.5 text-slate-500">{a.auditType}</td>
+                    <td className="px-4 py-2.5 font-semibold text-red-600">{formatDate(a.plannedEndDate)}</td>
+                    <td className="px-4 py-2.5 text-slate-700">{a.auditor}</td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-700">{a.findingCount}</td>
+                  </tr>
+                ))}
+                {overdueAudits.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">No overdue audits.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-between text-[10px] text-slate-400 border-t pt-4" style={{ borderColor: "#E2E8F0" }}>

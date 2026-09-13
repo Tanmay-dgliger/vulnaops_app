@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2, Circle, Upload, RefreshCw, Paperclip, External
 import { useData } from "@/lib/state/DataContext";
 import { formatDate } from "@/lib/business/format";
 import { calculateSlaStatus } from "@/lib/business/sla";
-import { StatusBadge, FindingTypeBadge } from "@/components/common/badges";
+import { StatusBadge, FindingTypeBadge, AuditFindingBadge } from "@/components/common/badges";
 
 function MetaRow({ label, value, color, mono }: { label: string; value: string; color?: string; mono?: boolean }) {
   return (
@@ -32,17 +32,23 @@ function Panel({ title, children, action }: { title: string; children: React.Rea
 
 export default function RemediationDetail({ id }: { id: string }) {
   const router = useRouter();
-  const { getRemediation, getVulnerability, getAsset, getApplication, toggleChecklistItem, requestRevalidation, simulateValidation, addComment } = useData();
+  const { getRemediation, getVulnerability, getAsset, getApplication, getAuditFinding, getAudit, toggleChecklistItem, requestRevalidation, simulateValidation, addComment } = useData();
   const [comment, setComment] = useState("");
 
   const rem = getRemediation(id);
   if (!rem) {
     return <div className="p-6 max-w-[1360px] mx-auto"><p className="text-sm text-slate-500">Remediation task not found.</p></div>;
   }
-  const vuln = getVulnerability(rem.vulnerabilityId);
-  const asset = vuln ? getAsset(vuln.assetId) : undefined;
-  const application = vuln ? getApplication(vuln.applicationId) : undefined;
-  const sla = vuln ? calculateSlaStatus(vuln.severity, vuln.firstSeen, vuln.status) : null;
+  const vuln = rem.vulnerabilityId ? getVulnerability(rem.vulnerabilityId) : undefined;
+  const finding = rem.auditFindingId ? getAuditFinding(rem.auditFindingId) : undefined;
+  const audit = finding ? getAudit(finding.auditId) : undefined;
+  const asset = getAsset((vuln?.assetId ?? finding?.assetId) || "");
+  const application = getApplication((vuln?.applicationId ?? finding?.applicationId) || "");
+  const sla = vuln
+    ? calculateSlaStatus(vuln.severity, vuln.firstSeen, vuln.status)
+    : finding
+    ? calculateSlaStatus(finding.severity, finding.createdDate, finding.status)
+    : null;
 
   const doneCount = rem.checklist.filter((i) => i.done).length;
   const isClosed = rem.status === "Closed";
@@ -56,13 +62,15 @@ export default function RemediationDetail({ id }: { id: string }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5 flex-wrap mb-2">
               {vuln && <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{vuln.cve}</span>}
+              {finding && <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{finding.id}</span>}
               {vuln && <FindingTypeBadge type={vuln.findingType} />}
-              {vuln && <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold" style={{ background: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> {vuln.severity.toUpperCase()}</span>}
+              {finding && <AuditFindingBadge />}
+              {(vuln || finding) && <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold" style={{ background: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> {(vuln?.severity ?? finding?.severity ?? "").toUpperCase()}</span>}
               <StatusBadge status={rem.status} />
               {sla?.state === "Breached" && <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium" style={{ background: "#FEF2F2", color: "#DC2626" }}>SLA Breached · {sla.label}</span>}
             </div>
             <h1 className="text-lg font-bold text-slate-900 mb-1 font-heading">{rem.action}</h1>
-            <p className="text-xs text-slate-500">{vuln?.title} · {vuln?.assetId} · {application?.name}</p>
+            <p className="text-xs text-slate-500">{vuln?.title ?? finding?.title} · {vuln?.assetId ?? finding?.assetId ?? "—"} · {application?.name ?? (finding ? `Audit: ${audit?.name ?? finding.auditId}` : "—")}</p>
           </div>
         </div>
 
@@ -121,7 +129,7 @@ export default function RemediationDetail({ id }: { id: string }) {
             ) : rem.lastScanResult ? (
               <div className="rounded-lg p-4 flex items-start gap-3 mb-4" style={{ background: "#FEF2F2", border: "1px solid #FECACA" }}>
                 <AlertTriangle size={15} className="text-red-500 mt-0.5 shrink-0" />
-                <div><div className="text-xs font-semibold text-red-700 mb-0.5">Last Validation Scan — {formatDate(rem.lastScanDate)}</div><div className="text-xs text-red-600">{rem.lastScanResult}. {vuln?.title} confirmed present on {vuln?.assetId}.</div></div>
+                <div><div className="text-xs font-semibold text-red-700 mb-0.5">Last Validation Scan — {formatDate(rem.lastScanDate)}</div><div className="text-xs text-red-600">{rem.lastScanResult}. {vuln?.title ?? finding?.title} confirmed present on {vuln?.assetId ?? finding?.assetId ?? "the affected scope"}.</div></div>
               </div>
             ) : (
               <div className="rounded-lg p-4 mb-4 text-xs text-slate-500" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>No validation scan has been requested yet.</div>
@@ -129,7 +137,7 @@ export default function RemediationDetail({ id }: { id: string }) {
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
                 { label: "Last Scan Date", value: rem.lastScanDate ? formatDate(rem.lastScanDate) : "—" },
-                { label: "Scanner", value: vuln?.scanner ?? "—" },
+                { label: "Scanner", value: vuln?.scanner ?? (finding ? "Manual Audit Review" : "—") },
                 { label: "Result", value: rem.validationResult, color: rem.validationResult === "Passed" ? "#16A34A" : rem.validationResult === "Pending" ? "#D97706" : "#0F172A" },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg p-3" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
@@ -187,6 +195,9 @@ export default function RemediationDetail({ id }: { id: string }) {
             {vuln && <MetaRow label="Finding" value={vuln.cve} mono />}
             {vuln && <MetaRow label="Tool" value={vuln.scanner} />}
             {vuln && <MetaRow label="CVSS Score" value={String(vuln.cvss)} color="#DC2626" />}
+            {finding && <MetaRow label="Audit Finding" value={finding.id} mono />}
+            {finding && <MetaRow label="Category" value={finding.category} />}
+            {finding && audit && <MetaRow label="Audit" value={audit.name} />}
             <MetaRow label="Status" value={rem.status} color="#1D4ED8" />
             <MetaRow label="Target Date" value={formatDate(rem.targetDate)} />
             <MetaRow label="Opened" value={formatDate(rem.opened)} />
@@ -225,8 +236,8 @@ export default function RemediationDetail({ id }: { id: string }) {
           <Panel title="Ownership">
             <MetaRow label="Business Unit" value={asset?.businessUnit ?? "—"} />
             <MetaRow label="Application" value={application?.name ?? "—"} />
-            <MetaRow label="Asset" value={asset?.name ?? vuln?.assetId ?? "—"} mono />
-            <MetaRow label="Environment" value={vuln?.environment ?? "—"} color="#DC2626" />
+            <MetaRow label="Asset" value={asset?.name ?? vuln?.assetId ?? finding?.assetId ?? "—"} mono />
+            {vuln && <MetaRow label="Environment" value={vuln.environment} color="#DC2626" />}
           </Panel>
 
           {(rem.changeRequest || rem.incident) && (
@@ -237,6 +248,7 @@ export default function RemediationDetail({ id }: { id: string }) {
           )}
 
           {vuln && <Link href={`/vulnerabilities/${vuln.id}`} className="block text-center text-xs text-blue-600 font-medium hover:text-blue-700">View full vulnerability detail →</Link>}
+          {finding && audit && <Link href={`/audits/${audit.id}`} className="block text-center text-xs text-blue-600 font-medium hover:text-blue-700">View audit →</Link>}
         </div>
       </div>
       <div className="h-4" />

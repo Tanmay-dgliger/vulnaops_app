@@ -21,6 +21,22 @@ export function FindingTypeBadge({ type }: { type: FindingType }) {
   );
 }
 
+const AUDIT_BADGE_CFG = { bg: "#EEF2FF", text: "#4338CA", border: "#C7D2FE" };
+
+/** Visually consistent with FindingTypeBadge, for the one non-FindingType source a
+ *  remediation can originate from: an audit finding (kept conceptually separate from
+ *  VAPT/SAST/DAST/SCA per product requirements). */
+export function AuditFindingBadge() {
+  return (
+    <span
+      className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide whitespace-nowrap"
+      style={{ background: AUDIT_BADGE_CFG.bg, color: AUDIT_BADGE_CFG.text, border: `1px solid ${AUDIT_BADGE_CFG.border}` }}
+    >
+      Audit
+    </span>
+  );
+}
+
 export const SEVERITY_CFG: Record<VulnerabilitySeverity, { bg: string; text: string; border: string; dot: string }> = {
   Critical: { bg: "#FEF2F2", text: "#DC2626", border: "#FECACA", dot: "#DC2626" },
   High: { bg: "#FFF7ED", text: "#EA580C", border: "#FED7AA", dot: "#EA580C" },
@@ -53,6 +69,18 @@ const STATUS_CFG: Record<string, { bg: string; text: string }> = {
   "False Positive": { bg: "#F8FAFC", text: "#94A3B8" },
   "Potential False Positive": { bg: "#FFFBEB", text: "#D97706" },
   Duplicate: { bg: "#F8FAFC", text: "#94A3B8" },
+  // Audit / Audit Finding statuses
+  Planned: { bg: "#F8FAFC", text: "#64748B" },
+  Scheduled: { bg: "#EFF6FF", text: "#2563EB" },
+  "In Progress": { bg: "#EFF6FF", text: "#1D4ED8" },
+  "Findings Review": { bg: "#F5F3FF", text: "#7C3AED" },
+  Remediation: { bg: "#EFF6FF", text: "#1D4ED8" },
+  Completed: { bg: "#F0FDF4", text: "#15803D" },
+  Cancelled: { bg: "#F8FAFC", text: "#94A3B8" },
+  Overdue: { bg: "#FEF2F2", text: "#DC2626" },
+  Open: { bg: "#EFF6FF", text: "#2563EB" },
+  "In Remediation": { bg: "#EFF6FF", text: "#1D4ED8" },
+  "Pending Validation": { bg: "#F5F3FF", text: "#7C3AED" },
 };
 
 export function StatusBadge({ status }: { status: VulnerabilityStatus | string }) {

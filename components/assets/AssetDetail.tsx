@@ -11,6 +11,7 @@ import { isOpen } from "@/lib/business/metrics";
 import { getAssetFindings, getAssetSecurityPosture, getApplicationAssets, getAssetRelationshipsFor } from "@/lib/business/asset-posture";
 import { calculateAge } from "@/lib/business/sla";
 import { formatDate, initials, ownerColor } from "@/lib/business/format";
+import { calculateAuditStatus, getAuditHistory } from "@/lib/business/audits";
 
 const TYPE_ICON: Record<AssetType, React.ReactNode> = {
   Server: <Server size={15} />, Application: <AppWindow size={15} />, "Web Server": <Globe size={15} />,
@@ -52,7 +53,7 @@ function SectionCard({ title, icon, children }: { title: string; icon?: React.Re
 
 export default function AssetDetail({ id }: { id: string }) {
   const router = useRouter();
-  const { getApplication, applications, apis, cloudAssets, assetRelationships, assets, vulnerabilities, exceptions, activities, getAsset } = useData();
+  const { getApplication, applications, apis, cloudAssets, assetRelationships, assets, vulnerabilities, exceptions, activities, getAsset, audits, auditScopes, auditFindings } = useData();
   const [tab, setTab] = useState<Tab>("overview");
   const asset = getAsset(id);
 
@@ -72,6 +73,10 @@ export default function AssetDetail({ id }: { id: string }) {
   );
   const relationships = getAssetRelationshipsFor("ASSET", asset.id, assetRelationships);
   const assetActivities = activities.filter((a) => a.entity === asset.name);
+  const auditHistory = getAuditHistory(asset.id, audits, auditScopes, auditFindings);
+  const lastCompletedAudit = auditHistory.filter((h) => h.audit.status === "Completed" && h.audit.actualEndDate).sort((a, b) => new Date(b.audit.actualEndDate!).getTime() - new Date(a.audit.actualEndDate!).getTime())[0];
+  const nextUpcomingAudit = auditHistory.filter((h) => h.audit.status !== "Completed" && h.audit.status !== "Cancelled").sort((a, b) => new Date(a.audit.plannedStartDate).getTime() - new Date(b.audit.plannedStartDate).getTime())[0];
+  const latestAudit = nextUpcomingAudit ?? lastCompletedAudit;
 
   return (
     <div className="p-6 space-y-5 max-w-[1360px] mx-auto">
@@ -152,6 +157,21 @@ export default function AssetDetail({ id }: { id: string }) {
                 <p className="text-xs text-slate-600 leading-relaxed">{asset.description}</p>
               </SectionCard>
             )}
+            <SectionCard title="Audit History" icon={<ActivityIcon size={14} />}>
+              {latestAudit ? (
+                <>
+                  <MetaRow label="Last Audit" value={lastCompletedAudit?.audit.actualEndDate ? formatDate(lastCompletedAudit.audit.actualEndDate) : "—"} />
+                  <MetaRow label="Audit Type" value={latestAudit.audit.auditType} />
+                  <MetaRow label="Result" value={lastCompletedAudit ? (lastCompletedAudit.audit.criticalFindings + lastCompletedAudit.audit.highFindings > 0 ? "Needs Improvement" : "Satisfactory") : "—"} />
+                  <MetaRow label="Open Findings" value={String(latestAudit.openFindings)} color={latestAudit.openFindings > 0 ? "#DC2626" : undefined} />
+                  <MetaRow label="Next Audit" value={nextUpcomingAudit ? formatDate(nextUpcomingAudit.audit.plannedStartDate) : lastCompletedAudit?.audit.nextAuditDate ? formatDate(lastCompletedAudit.audit.nextAuditDate) : "—"} />
+                  <MetaRow label="Status" value={calculateAuditStatus(latestAudit.audit)} />
+                  <Link href={`/audits/${latestAudit.audit.id}`} className="inline-block mt-2 text-xs text-blue-600 font-medium">View audit →</Link>
+                </>
+              ) : (
+                <p className="text-xs text-slate-400">No audits recorded for this asset yet.</p>
+              )}
+            </SectionCard>
           </div>
         </div>
       )}

@@ -11,6 +11,9 @@ import { getApis } from "./apis";
 import { getCloudAssets } from "./cloud-assets";
 import { getAssetRelationships } from "./asset-relationships";
 import { getAssetDiscoveryRecords } from "./asset-discovery";
+import { getAudits } from "./audits";
+import { getAuditScopes } from "./audit-scope";
+import { getAuditFindings } from "./audit-findings";
 
 export function loadAllData() {
   return {
@@ -27,6 +30,9 @@ export function loadAllData() {
     cloudAssets: getCloudAssets(),
     assetRelationships: getAssetRelationships(),
     assetDiscovery: getAssetDiscoveryRecords(),
+    audits: getAudits(),
+    auditScopes: getAuditScopes(),
+    auditFindings: getAuditFindings(),
   };
 }
 

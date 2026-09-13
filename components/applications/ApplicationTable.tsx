@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ChevronRight, AppWindow } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
-import { OwnerAvatar, RiskScoreBar } from "@/components/common/badges";
+import { OwnerAvatar, RiskScoreBar, StatusBadge } from "@/components/common/badges";
 import { isOpen } from "@/lib/business/metrics";
+import { getAuditSummary } from "@/lib/business/audits";
+import { formatDate } from "@/lib/business/format";
 
 const CRIT_CFG: Record<string, { bg: string; text: string; border: string }> = {
   Critical: { bg: "#FEF2F2", text: "#DC2626", border: "#FECACA" },
@@ -16,7 +18,7 @@ const CRIT_CFG: Record<string, { bg: string; text: string; border: string }> = {
 
 export default function ApplicationTable() {
   const router = useRouter();
-  const { applications, assets, vulnerabilities } = useData();
+  const { applications, assets, vulnerabilities, audits, auditScopes, auditFindings } = useData();
   const [search, setSearch] = useState("");
 
   const rows = useMemo(
@@ -27,9 +29,16 @@ export default function ApplicationTable() {
         const open = appVulns.filter(isOpen);
         const critical = open.filter((v) => v.severity === "Critical").length;
         const riskScore = open.length ? Math.max(...open.map((v) => v.riskScore)) : 0;
-        return { app, assetCount: appAssets.length, openCount: open.length, critical, riskScore };
+        const auditSummary = getAuditSummary(app.id, audits, auditScopes, auditFindings);
+        return {
+          app, assetCount: appAssets.length, openCount: open.length, critical, riskScore,
+          lastAudit: auditSummary.lastAuditDate,
+          nextAudit: auditSummary.nextAuditDate,
+          auditStatus: auditSummary.status,
+          openAuditFindings: auditSummary.openFindings,
+        };
       }),
-    [applications, assets, vulnerabilities]
+    [applications, assets, vulnerabilities, audits, auditScopes, auditFindings]
   );
 
   const filtered = rows.filter((r) => {
@@ -55,9 +64,10 @@ export default function ApplicationTable() {
       </div>
 
       <div className="rounded-xl border overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr style={{ borderBottom: "2px solid #F1F5F9", background: "#FAFBFC" }}>
-            {["Application", "Business Unit", "Owner", "Criticality", "Assets", "Open Vulns", "Critical", "Risk Score", ""].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">{h}</th>)}
+            {["Application", "Business Unit", "Owner", "Criticality", "Assets", "Open Vulns", "Critical", "Risk Score", "Last Audit", "Next Audit", "Audit Status", "Open Audit Findings", ""].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">{h}</th>)}
           </tr></thead>
           <tbody>
             {filtered.map((r, i) => {
@@ -72,12 +82,17 @@ export default function ApplicationTable() {
                   <td className="px-4 py-3"><span className="text-xs font-semibold text-slate-700">{r.openCount}</span></td>
                   <td className="px-4 py-3"><span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold" style={{ background: "#FEF2F2", color: "#DC2626" }}>{r.critical}</span></td>
                   <td className="px-4 py-3"><RiskScoreBar score={r.riskScore} /></td>
+                  <td className="px-4 py-3"><span className="text-xs text-slate-500">{r.lastAudit ? formatDate(r.lastAudit) : "—"}</span></td>
+                  <td className="px-4 py-3"><span className="text-xs text-slate-500">{r.nextAudit ? formatDate(r.nextAudit) : "—"}</span></td>
+                  <td className="px-4 py-3">{r.auditStatus ? <StatusBadge status={r.auditStatus} /> : <span className="text-xs text-slate-400">—</span>}</td>
+                  <td className="px-4 py-3"><span className="text-xs font-semibold" style={{ color: r.openAuditFindings > 0 ? "#DC2626" : "#64748B" }}>{r.openAuditFindings}</span></td>
                   <td className="px-4 py-3"><ChevronRight size={14} className="text-slate-300" /></td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+        </div>
       </div>
       <div className="h-4" />
     </div>

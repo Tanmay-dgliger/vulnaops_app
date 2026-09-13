@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { Search, ChevronRight, Server, AppWindow, Globe, Database, Shield, Radio, Box, Cloud, ChevronDown, X } from "lucide-react";
 import { useData } from "@/lib/state/DataContext";
 import type { Asset, AssetType } from "@/types/asset";
-import { OwnerAvatar, RiskScoreBar } from "@/components/common/badges";
+import { OwnerAvatar, RiskScoreBar, StatusBadge } from "@/components/common/badges";
 import { isOpen } from "@/lib/business/metrics";
 import { getAssetFindings, getAssetRiskScore } from "@/lib/business/asset-posture";
 import { formatDate } from "@/lib/business/format";
+import { getAuditSummary } from "@/lib/business/audits";
 
 const TYPE_ICON: Record<AssetType, React.ReactNode> = {
   Server: <Server size={13} />, Application: <AppWindow size={13} />, "Web Server": <Globe size={13} />,
@@ -61,7 +62,7 @@ interface AssetTableProps {
 
 export default function AssetTable({ initialCriticality, initialStatus, initialApplicationId }: AssetTableProps) {
   const router = useRouter();
-  const { assets, applications, vulnerabilities } = useData();
+  const { assets, applications, vulnerabilities, audits, auditScopes, auditFindings } = useData();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [envFilter, setEnvFilter] = useState("");
@@ -81,15 +82,19 @@ export default function AssetTable({ initialCriticality, initialStatus, initialA
       assets.map((a) => {
         const findings = getAssetFindings(a.id, vulnerabilities);
         const openFindings = findings.filter(isOpen);
+        const auditSummary = getAuditSummary(a.id, audits, auditScopes, auditFindings);
         return {
           asset: a,
           appName: appById.get(a.applicationId)?.name ?? "—",
           findingsCount: findings.length,
           openCount: openFindings.length,
           riskScore: getAssetRiskScore(findings),
+          lastAudit: auditSummary.lastAuditDate,
+          nextAudit: auditSummary.nextAuditDate,
+          auditStatus: auditSummary.status,
         };
       }),
-    [assets, vulnerabilities, appById]
+    [assets, vulnerabilities, appById, audits, auditScopes, auditFindings]
   );
 
   const types = useMemo(() => Array.from(new Set(assets.map((a) => a.type))).sort(), [assets]);
@@ -191,7 +196,7 @@ export default function AssetTable({ initialCriticality, initialStatus, initialA
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr style={{ borderBottom: "2px solid #F1F5F9", background: "#FAFBFC" }}>
-              {["Asset", "Type", "Environment", "Business Unit", "Owner", "Criticality", "Exposure", "Security Risk", "Findings", "Last Seen", "Status", ""].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">{h}</th>)}
+              {["Asset", "Type", "Environment", "Business Unit", "Owner", "Criticality", "Exposure", "Security Risk", "Findings", "Last Seen", "Status", "Last Audit", "Next Audit", "Audit Status", ""].map((h) => <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">{h}</th>)}
             </tr></thead>
             <tbody>
               {filtered.map((r, i) => {
@@ -210,12 +215,15 @@ export default function AssetTable({ initialCriticality, initialStatus, initialA
                     <td className="px-4 py-3"><span className="text-xs font-semibold text-slate-700">{r.findingsCount}</span>{r.openCount > 0 && <span className="text-[10px] text-slate-400 ml-1">({r.openCount} open)</span>}</td>
                     <td className="px-4 py-3"><span className="text-xs text-slate-500">{formatDate(r.asset.lastSeen ?? r.asset.lastScan)}</span></td>
                     <td className="px-4 py-3"><span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium" style={{ background: sc.bg, color: sc.text }}>{r.asset.status ?? "Active"}</span></td>
+                    <td className="px-4 py-3"><span className="text-xs text-slate-500">{r.lastAudit ? formatDate(r.lastAudit) : "—"}</span></td>
+                    <td className="px-4 py-3"><span className="text-xs text-slate-500">{r.nextAudit ? formatDate(r.nextAudit) : "—"}</span></td>
+                    <td className="px-4 py-3">{r.auditStatus ? <StatusBadge status={r.auditStatus} /> : <span className="text-xs text-slate-400">—</span>}</td>
                     <td className="px-4 py-3"><ChevronRight size={14} className="text-slate-300" /></td>
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={12} className="px-4 py-12 text-center text-sm text-slate-400">No assets match your search.</td></tr>
+                <tr><td colSpan={15} className="px-4 py-12 text-center text-sm text-slate-400">No assets match your search.</td></tr>
               )}
             </tbody>
           </table>

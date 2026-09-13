@@ -14,6 +14,8 @@ import { getLifecycleStages } from "@/lib/business/lifecycle";
 import { SeverityBadge, SlaBadge, StatusBadge, FINDING_TYPE_CFG } from "@/components/common/badges";
 import { calculateAge, calculateSlaStatus } from "@/lib/business/sla";
 import { getAssetCoverage } from "@/lib/business/asset-posture";
+import { calculateAuditStatus, getUpcomingAudits, getOverdueAudits } from "@/lib/business/audits";
+import { formatDate } from "@/lib/business/format";
 
 interface KPICard {
   label: string;
@@ -148,7 +150,7 @@ const FINDING_TYPE_OPTIONS = [
 ];
 
 export default function Dashboard() {
-  const { vulnerabilities, assets } = useData();
+  const { vulnerabilities, assets, audits, auditFindings } = useData();
   const [trendView, setTrendView] = useState<"all" | "critical">("all");
   const [timeRange, setTimeRange] = useState("30");
   const [businessUnit, setBusinessUnit] = useState("all");
@@ -193,6 +195,12 @@ export default function Dashboard() {
 
   const total = severityData.reduce((a, d) => a + d.value, 0) || 1;
   const compliancePct = sla.compliancePct / 100;
+
+  const now = useMemo(() => new Date(), []);
+  const upcomingAudits = useMemo(() => getUpcomingAudits(audits, now), [audits, now]);
+  const overdueAudits = useMemo(() => getOverdueAudits(audits, now), [audits, now]);
+  const auditsInProgress = audits.filter((a) => calculateAuditStatus(a, now) === "In Progress").length;
+  const openAuditFindings = auditFindings.filter((f) => f.status !== "Closed" && f.status !== "Accepted Risk").length;
 
   const kpiCards: KPICard[] = [
     { label: "Total Findings", value: metrics.totalFindings.toLocaleString(), delta: "8.4%", deltaDir: "down", deltaGood: true, href: "/vulnerabilities" },
@@ -390,6 +398,60 @@ export default function Dashboard() {
           </div>
           <div className="h-1.5 rounded-full overflow-hidden mt-3" style={{ background: "#F1F5F9" }}>
             <div className="h-full rounded-full" style={{ width: `${coverage.coveragePct}%`, background: "#2563EB" }} />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Audit &amp; Compliance</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Audit programme health across the enterprise</p>
+          </div>
+          <Link href="/audit-calendar" className="text-xs text-blue-600 font-medium flex items-center gap-1 hover:text-blue-700 transition-colors">Open Audit Calendar <ArrowRight size={12} /></Link>
+        </div>
+        <div className="grid grid-cols-4 gap-3 mb-5">
+          <Link href="/audit-schedule" className="rounded-lg p-3 text-center block hover:shadow-sm transition-shadow" style={{ background: "#EFF6FF", border: "1px solid #BFDBFE" }}>
+            <div className="text-xl font-bold font-heading" style={{ color: "#2563EB" }}>{upcomingAudits.length}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mt-1">Upcoming Audits</div>
+          </Link>
+          <Link href="/audits?status=Overdue" className="rounded-lg p-3 text-center block hover:shadow-sm transition-shadow" style={{ background: "#FEF2F2", border: "1px solid #FECACA" }}>
+            <div className="text-xl font-bold font-heading" style={{ color: "#DC2626" }}>{overdueAudits.length}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mt-1">Overdue Audits</div>
+          </Link>
+          <Link href="/audits?status=In Progress" className="rounded-lg p-3 text-center block hover:shadow-sm transition-shadow" style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+            <div className="text-xl font-bold font-heading" style={{ color: "#D97706" }}>{auditsInProgress}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mt-1">Audits In Progress</div>
+          </Link>
+          <Link href="/audit-findings" className="rounded-lg p-3 text-center block hover:shadow-sm transition-shadow" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+            <div className="text-xl font-bold font-heading text-slate-900">{openAuditFindings}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mt-1">Open Audit Findings</div>
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg border" style={{ borderColor: "#E2E8F0" }}>
+            <div className="px-4 py-2.5 border-b text-xs font-semibold text-slate-900" style={{ borderColor: "#F1F5F9" }}>Upcoming Audits</div>
+            <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
+              {upcomingAudits.slice(0, 5).map((a) => (
+                <Link key={a.id} href={`/audits/${a.id}`} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                  <div className="min-w-0"><div className="text-xs font-semibold text-slate-800 truncate">{a.name}</div><div className="text-[10px] text-slate-400 mt-0.5">{a.auditType} · {a.scopeName}</div></div>
+                  <span className="text-xs text-slate-500 shrink-0 ml-2">{formatDate(a.plannedStartDate)}</span>
+                </Link>
+              ))}
+              {upcomingAudits.length === 0 && <p className="px-4 py-4 text-xs text-slate-400">No upcoming audits in the next 60 days.</p>}
+            </div>
+          </div>
+          <div className="rounded-lg border" style={{ borderColor: "#E2E8F0" }}>
+            <div className="px-4 py-2.5 border-b text-xs font-semibold text-slate-900" style={{ borderColor: "#F1F5F9" }}>Overdue Audits</div>
+            <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
+              {overdueAudits.slice(0, 5).map((a) => (
+                <Link key={a.id} href={`/audits/${a.id}`} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                  <div className="min-w-0"><div className="text-xs font-semibold text-slate-800 truncate">{a.name}</div><div className="text-[10px] text-slate-400 mt-0.5">{a.auditType} · {a.scopeName}</div></div>
+                  <span className="text-xs font-semibold shrink-0 ml-2" style={{ color: "#DC2626" }}>{formatDate(a.plannedEndDate)}</span>
+                </Link>
+              ))}
+              {overdueAudits.length === 0 && <p className="px-4 py-4 text-xs text-slate-400">No overdue audits.</p>}
+            </div>
           </div>
         </div>
       </section>
